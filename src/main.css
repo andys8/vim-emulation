@@ -1,18 +1,9 @@
-html, body {
-  font-family: 'Source Sans Pro', 'Trebuchet MS', 'Lucida Grande', 'Bitstream Vera Sans', 'Helvetica Neue', sans-serif;
+html, body, #root, [data-elm-hot] {
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
   color: #293c4b;
-}
-
-#root, [data-elm-hot] {
-  width: 100%;
-  height: 100%;
-}
-
-h1 {
-  font-size: 30px;
+  overflow: hidden;
 }
 

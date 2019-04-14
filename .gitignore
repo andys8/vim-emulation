@@ -1,6 +1,6 @@
 
-# Created by https://www.gitignore.io/api/elm,web,vim,node,code
-# Edit at https://www.gitignore.io/?templates=elm,web,vim,node,code
+# Created by https://www.gitignore.io/api/elm,vim,node,code
+# Edit at https://www.gitignore.io/?templates=elm,vim,node,code
 
 ### Code ###
 .vscode/*
@@ -120,19 +120,6 @@ tags
 # Persistent undo
 [._]*.un~
 
-### Web ###
-*.asp
-*.cer
-*.csr
-*.css
-*.htm
-*.html
-*.js
-*.jsp
-*.php
-*.rss
-*.xhtml
-
-# End of https://www.gitignore.io/api/elm,web,vim,node,code
+# End of https://www.gitignore.io/api/elm,vim,node,code
 
 build/

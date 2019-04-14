@@ -308,8 +308,14 @@ handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
             cursor
     in
     case keyStrokes of
+        "d" :: "d" :: _ ->
+            ( model, [ ExecuteAction (DeleteLine cursorLine) ] )
+
         "i" :: _ ->
             ( model, [ SetMode Insert ] )
+
+        "a" :: _ ->
+            ( model, [ SetMode Insert, SetCursor (cursorMoveRight cursor) ] )
 
         "o" :: _ ->
             ( model
@@ -348,9 +354,6 @@ handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
 
             else
                 ( model, [] )
-
-        "d" :: "d" :: _ ->
-            ( model, [ ExecuteAction (DeleteLine cursorLine) ] )
 
         _ ->
             ( model, [] )

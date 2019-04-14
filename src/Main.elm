@@ -167,7 +167,7 @@ viewBufferLine (Cursor cursorLine cursorChar) lineNumber lineContent =
     if lineNumber == cursorLine then
         let
             ( before, middle, after ) =
-                splitLine cursorChar lineContent
+                splitLine cursorChar <| emptyToSpace lineContent
 
             cursorElement =
                 el [ Background.color (rgb255 100 100 100), Font.color (rgb255 255 255 255) ] <| text middle
@@ -289,8 +289,16 @@ emptyToSpace s =
 
 
 splitLine : Int -> String -> ( String, String, String )
-splitLine charAt content =
+splitLine cursorChar content =
     let
+        -- The cursor can be positioned behind the last char when moved from a longer line
+        charAt =
+            if cursorChar >= String.length content then
+                String.length content - 1
+
+            else
+                cursorChar
+
         before =
             String.slice 0 charAt content
 

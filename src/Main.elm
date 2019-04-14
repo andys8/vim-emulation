@@ -25,6 +25,7 @@ type Msg
     | KeyDown String
     | SetMode Mode
     | SetCursor Cursor
+    | DeleteLine Int
 
 
 type Mode
@@ -105,6 +106,26 @@ update msg model =
 
         SetCursor cursor ->
             ( { model | cursor = cursor }, Cmd.none )
+
+        DeleteLine lineNumber ->
+            let
+                bufferContent =
+                    model.bufferContent
+                        |> String.lines
+                        |> List.Extra.removeAt lineNumber
+                        |> String.join "\n"
+
+                lastLineWasDeleted =
+                    cursorLine_ model.cursor >= List.length (String.lines bufferContent)
+
+                cursor =
+                    if lastLineWasDeleted then
+                        cursorMoveUp model.cursor
+
+                    else
+                        model.cursor
+            in
+            ( { model | bufferContent = bufferContent, cursor = cursor }, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
@@ -253,44 +274,47 @@ handleInsertMode ({ bufferContent, cursor } as model) keyDown =
 
 
 handleNormalMode : Model -> String -> ( Model, List Msg )
-handleNormalMode ({ cursor, bufferContent } as model) keyDown =
+handleNormalMode ({ cursor, bufferContent, keyStrokes } as model) keyDown =
     let
         (Cursor cursorLine cursorChar) =
             cursor
     in
-    case keyDown of
-        "i" ->
+    case ( keyDown, keyStrokes ) of
+        ( "i", _ ) ->
             ( model, [ SetMode Insert ] )
 
-        "h" ->
+        ( "h", _ ) ->
             if cursorChar > 0 then
                 ( model, [ SetCursor (cursorMoveLeft cursor) ] )
 
             else
                 ( model, [] )
 
-        "j" ->
+        ( "j", _ ) ->
             if cursorLine < List.length (String.lines bufferContent) - 1 then
                 ( model, [ SetCursor (cursorMoveDown cursor) ] )
 
             else
                 ( model, [] )
 
-        "k" ->
+        ( "k", _ ) ->
             if cursorLine > 0 then
                 ( model, [ SetCursor (cursorMoveUp cursor) ] )
 
             else
                 ( model, [] )
 
-        "l" ->
+        ( "l", _ ) ->
             if cursorChar < (String.length (currentBufferLine model) - 1) then
                 ( model, [ SetCursor (cursorMoveRight cursor) ] )
 
             else
                 ( model, [] )
 
-        _ ->
+        ( "d", "d" :: _ ) ->
+            ( model, [ DeleteLine cursorLine ] )
+
+        ( _, _ ) ->
             ( model, [] )
 
 
@@ -393,3 +417,8 @@ cursorMoveDown (Cursor line char) =
 cursorChar_ : Cursor -> Int
 cursorChar_ (Cursor _ cursorChar) =
     cursorChar
+
+
+cursorLine_ : Cursor -> Int
+cursorLine_ (Cursor cursorLine _) =
+    cursorLine

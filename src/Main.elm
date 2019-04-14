@@ -7,6 +7,7 @@ import Element.Background as Background
 import Element.Font as Font
 import Html exposing (Html)
 import Json.Decode as Decode
+import List.Extra
 import Platform.Sub as Sub exposing (Sub)
 import Update.Extra exposing (sequence)
 
@@ -23,6 +24,7 @@ type Msg
     = NoOp
     | KeyDown String
     | SetMode Mode
+    | SetCursor Cursor
 
 
 type Mode
@@ -91,17 +93,28 @@ update msg model =
 
                     else
                         model.bufferContent
+
+                ( newModel, cmdList ) =
+                    if model.mode == Normal then
+                        handleNormalMode model key
+
+                    else
+                        ( model, [] )
             in
-            ( { model
+            ( { newModel
                 | keyStrokes = key :: model.keyStrokes
                 , bufferContent = bufferContent
               }
             , Cmd.none
             )
                 |> sequence update (List.filterMap identity [ setModeCmd ])
+                |> sequence update cmdList
 
         SetMode mode ->
             ( { model | mode = mode }, Cmd.none )
+
+        SetCursor cursor ->
+            ( { model | cursor = cursor }, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
@@ -189,8 +202,8 @@ modeToString mode =
 
 
 handleInsertMode : String -> String -> String
-handleInsertMode buffer key =
-    case key of
+handleInsertMode buffer keyDown =
+    case keyDown of
         "Enter" ->
             buffer ++ "\n"
 
@@ -210,7 +223,59 @@ handleInsertMode buffer key =
             buffer
 
         _ ->
-            buffer ++ key
+            buffer ++ keyDown
+
+
+handleNormalMode : Model -> String -> ( Model, List Msg )
+handleNormalMode ({ cursor, bufferContent } as model) keyDown =
+    let
+        (Cursor cursorLine cursorChar) =
+            cursor
+    in
+    case keyDown of
+        "h" ->
+            if cursorChar > 0 then
+                ( model, [ SetCursor (Cursor cursorLine (cursorChar - 1)) ] )
+
+            else
+                ( model, [] )
+
+        "j" ->
+            if cursorLine < List.length (String.lines bufferContent) - 1 then
+                ( model, [ SetCursor (Cursor (cursorLine + 1) cursorChar) ] )
+
+            else
+                ( model, [] )
+
+        "k" ->
+            if cursorLine > 0 then
+                ( model, [ SetCursor (Cursor (cursorLine - 1) cursorChar) ] )
+
+            else
+                ( model, [] )
+
+        "l" ->
+            if cursorChar < (String.length (currentBufferLine model) - 1) then
+                ( model, [ SetCursor (Cursor cursorLine (cursorChar + 1)) ] )
+
+            else
+                ( model, [] )
+
+        _ ->
+            ( model, [] )
+
+
+currentBufferLine : Model -> String
+currentBufferLine { bufferContent, cursor } =
+    let
+        (Cursor cursorLine _) =
+            cursor
+    in
+    String.lines bufferContent
+        |> List.Extra.getAt cursorLine
+        -- Note: Not sure if this is a good idea.
+        -- Shouldn't be possible and maybe handling is overhead, but defaulting can lead to errors.
+        |> Maybe.withDefault ""
 
 
 emptyToSpace : String -> String

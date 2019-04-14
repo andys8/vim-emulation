@@ -87,26 +87,17 @@ update msg model =
                         _ ->
                             Nothing
 
-                bufferContent =
-                    if model.mode == Insert then
-                        handleInsertMode model.bufferContent key
-
-                    else
-                        model.bufferContent
-
                 ( newModel, cmdList ) =
                     if model.mode == Normal then
                         handleNormalMode model key
 
+                    else if model.mode == Insert then
+                        handleInsertMode model key
+
                     else
                         ( model, [] )
             in
-            ( { newModel
-                | keyStrokes = key :: model.keyStrokes
-                , bufferContent = bufferContent
-              }
-            , Cmd.none
-            )
+            ( { newModel | keyStrokes = key :: model.keyStrokes }, Cmd.none )
                 |> sequence update (List.filterMap identity [ setModeCmd ])
                 |> sequence update cmdList
 
@@ -201,29 +192,42 @@ modeToString mode =
             "Normal"
 
 
-handleInsertMode : String -> String -> String
-handleInsertMode buffer keyDown =
-    case keyDown of
-        "Enter" ->
-            buffer ++ "\n"
+handleInsertMode : Model -> String -> ( Model, List Msg )
+handleInsertMode ({ bufferContent, cursor } as model) keyDown =
+    let
+        ( beforeCursor, atCursor, afterCursor ) =
+            splitBufferContent cursor bufferContent
 
-        "Backspace" ->
-            String.dropRight 1 buffer
+        ( newBufferContent, newCursor ) =
+            case keyDown of
+                "Enter" ->
+                    ( beforeCursor ++ "\n" ++ atCursor ++ afterCursor
+                    , cursor
+                    )
 
-        "Shift" ->
-            buffer
+                "Backspace" ->
+                    ( String.dropRight 1 beforeCursor ++ atCursor ++ afterCursor
+                    , cursorMoveLeft cursor
+                    )
 
-        "Alt" ->
-            buffer
+                "Shift" ->
+                    ( bufferContent, cursor )
 
-        "Meta" ->
-            buffer
+                "Alt" ->
+                    ( bufferContent, cursor )
 
-        "Escape" ->
-            buffer
+                "Meta" ->
+                    ( bufferContent, cursor )
 
-        _ ->
-            buffer ++ keyDown
+                "Escape" ->
+                    ( bufferContent, cursor )
+
+                _ ->
+                    ( beforeCursor ++ keyDown ++ atCursor ++ afterCursor
+                    , cursorMoveRight cursor
+                    )
+    in
+    ( { model | bufferContent = newBufferContent, cursor = newCursor }, [] )
 
 
 handleNormalMode : Model -> String -> ( Model, List Msg )
@@ -235,28 +239,28 @@ handleNormalMode ({ cursor, bufferContent } as model) keyDown =
     case keyDown of
         "h" ->
             if cursorChar > 0 then
-                ( model, [ SetCursor (Cursor cursorLine (cursorChar - 1)) ] )
+                ( model, [ SetCursor (cursorMoveLeft cursor) ] )
 
             else
                 ( model, [] )
 
         "j" ->
             if cursorLine < List.length (String.lines bufferContent) - 1 then
-                ( model, [ SetCursor (Cursor (cursorLine + 1) cursorChar) ] )
+                ( model, [ SetCursor (cursorMoveDown cursor) ] )
 
             else
                 ( model, [] )
 
         "k" ->
             if cursorLine > 0 then
-                ( model, [ SetCursor (Cursor (cursorLine - 1) cursorChar) ] )
+                ( model, [ SetCursor (cursorMoveUp cursor) ] )
 
             else
                 ( model, [] )
 
         "l" ->
             if cursorChar < (String.length (currentBufferLine model) - 1) then
-                ( model, [ SetCursor (Cursor cursorLine (cursorChar + 1)) ] )
+                ( model, [ SetCursor (cursorMoveRight cursor) ] )
 
             else
                 ( model, [] )
@@ -288,6 +292,32 @@ emptyToSpace s =
             s
 
 
+splitBufferContent : Cursor -> String -> ( String, String, String )
+splitBufferContent (Cursor cursorLine cursorChar) content =
+    let
+        lines =
+            String.lines content
+
+        linesBefore =
+            String.join "" <|
+                List.take cursorLine lines
+
+        currentLine =
+            String.join "" <|
+                List.take 1 <|
+                    List.drop cursorLine lines
+
+        linesAfter =
+            String.join "" <|
+                List.drop (cursorLine + 1) lines
+
+        ( beforeCurrentLine, middleCurrentLine, afterCurrentLine ) =
+            splitLine cursorChar currentLine
+    in
+    ( linesBefore ++ beforeCurrentLine, middleCurrentLine, afterCurrentLine ++ linesAfter )
+        |> Debug.log "triplet"
+
+
 splitLine : Int -> String -> ( String, String, String )
 splitLine cursorChar content =
     let
@@ -309,3 +339,23 @@ splitLine cursorChar content =
             String.slice (charAt + 1) (String.length content) content
     in
     ( before, middle, after )
+
+
+cursorMoveRight : Cursor -> Cursor
+cursorMoveRight (Cursor line char) =
+    Cursor line (char + 1)
+
+
+cursorMoveLeft : Cursor -> Cursor
+cursorMoveLeft (Cursor line char) =
+    Cursor line (char - 1)
+
+
+cursorMoveUp : Cursor -> Cursor
+cursorMoveUp (Cursor line char) =
+    Cursor (line - 1) char
+
+
+cursorMoveDown : Cursor -> Cursor
+cursorMoveDown (Cursor line char) =
+    Cursor (line + 1) char

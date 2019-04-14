@@ -204,22 +204,23 @@ viewBuffer { cursor, bufferContent, mode } =
 
 viewBufferLine : Mode -> Cursor -> Int -> String -> Element msg
 viewBufferLine mode cursor lineNumber lineContent =
-    if lineNumber == cursorLine_ cursor then
-        let
-            (Cursor _ normalizedCursorChar) =
-                if mode == Normal then
-                    cursorInNormalModeLine (String.length lineContent) cursor
+    row [ height (minimum fontSize fill) ] <|
+        if lineNumber == cursorLine_ cursor then
+            let
+                (Cursor _ normalizedCursorChar) =
+                    if mode == Normal then
+                        cursorInNormalModeLine (String.length lineContent) cursor
 
-                else
-                    cursor
+                    else
+                        cursor
 
-            ( before, middle, after ) =
-                splitLine normalizedCursorChar lineContent
-        in
-        row [ height (minimum fontSize fill) ] [ text before, viewCursor middle, text after ]
+                ( before, middle, after ) =
+                    splitLine normalizedCursorChar lineContent
+            in
+            [ text before, viewCursor middle, text after ]
 
-    else
-        el [ height (minimum fontSize fill) ] <| text lineContent
+        else
+            [ text lineContent ]
 
 
 viewCursor : String -> Element msg
@@ -241,7 +242,7 @@ viewAirline model =
 viewAllKeyStrokes : List String -> Element msg
 viewAllKeyStrokes keyStrokes =
     row
-        [ alignBottom, padding 4, Font.color (rgb255 170 170 170) ]
+        [ alignBottom, Font.color (rgb255 170 170 170), height (minimum fontSize fill) ]
         [ text <| String.join " " keyStrokes ]
 
 

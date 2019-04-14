@@ -156,8 +156,15 @@ viewBufferLine : Mode -> Cursor -> Int -> String -> Element msg
 viewBufferLine mode (Cursor cursorLine cursorChar) lineNumber lineContent =
     if lineNumber == cursorLine then
         let
+            charAt =
+                if mode == Normal && cursorChar >= String.length lineContent then
+                    String.length lineContent - 1
+
+                else
+                    cursorChar
+
             ( before, middle, after ) =
-                splitLine cursorChar lineContent
+                splitLine charAt lineContent
 
             cursorElement =
                 el [ Background.color (rgb255 100 100 100), Font.color (rgb255 255 255 255) ] <| text <| emptyToSpace middle
@@ -193,42 +200,54 @@ modeToString mode =
 
 handleInsertMode : Model -> String -> ( Model, List Msg )
 handleInsertMode ({ bufferContent, cursor } as model) keyDown =
+    let
+        ignoredKeys =
+            [ "Alt", "Shift", "Meta", "Control", "ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp" ]
+    in
     if keyDown == "Escape" then
         ( model, [ SetMode Normal ] )
 
+    else if List.member keyDown ignoredKeys then
+        ( model, [] )
+
     else
         let
-            ( beforeCursor, atCursor, afterCursor ) =
-                splitBufferContent cursor bufferContent
+            (Cursor cursorLine cursorChar) =
+                cursor
 
-            ( newBufferContent, newCursor ) =
+            { linesBefore, before, middle, after, linesAfter } =
+                splitBufferContent cursor bufferContent
+                    |> Debug.log "before"
+
+            ( newCurrentLine, newCursor ) =
                 case keyDown of
                     "Enter" ->
-                        ( beforeCursor ++ "\n" ++ atCursor ++ afterCursor
-                        , cursorMoveDown cursor
+                        ( before ++ "\n" ++ middle ++ after
+                        , Cursor (cursorLine + 1) 0
                         )
 
                     "Backspace" ->
-                        ( String.dropRight 1 beforeCursor ++ atCursor ++ afterCursor
-                        , cursorMoveLeft cursor
+                        ( String.dropRight 1 before ++ middle ++ after
+                        , if cursorChar > 0 then
+                            cursorMoveLeft cursor
+
+                          else
+                            cursor
                         )
 
-                    "Shift" ->
-                        ( bufferContent, cursor )
-
-                    "Alt" ->
-                        ( bufferContent, cursor )
-
-                    "Meta" ->
-                        ( bufferContent, cursor )
-
-                    "Escape" ->
-                        ( bufferContent, cursor )
+                    "Delete" ->
+                        ( before ++ after, cursor )
 
                     _ ->
-                        ( beforeCursor ++ keyDown ++ atCursor ++ afterCursor
+                        ( before ++ keyDown ++ middle ++ after
                         , cursorMoveRight cursor
                         )
+
+            newBufferContent =
+                linesBefore ++ [ newCurrentLine ] ++ linesAfter |> String.join "\n"
+
+            _ =
+                Debug.log "after" (splitBufferContent newCursor newBufferContent)
         in
         ( { model | bufferContent = newBufferContent, cursor = newCursor }, [] )
 
@@ -275,7 +294,7 @@ handleNormalMode ({ cursor, bufferContent } as model) keyDown =
             ( model, [] )
 
 
-currentBufferLine : Model -> String
+currentBufferLine : { a | bufferContent : String, cursor : Cursor } -> String
 currentBufferLine { bufferContent, cursor } =
     let
         (Cursor cursorLine _) =
@@ -298,30 +317,39 @@ emptyToSpace s =
             s
 
 
-splitBufferContent : Cursor -> String -> ( String, String, String )
-splitBufferContent (Cursor cursorLine cursorChar) content =
+splitBufferContent :
+    Cursor
+    -> String
+    ->
+        { linesBefore : List String
+        , before : String
+        , middle : String
+        , after : String
+        , linesAfter : List String
+        }
+splitBufferContent ((Cursor cursorLine cursorChar) as cursor) bufferContent =
     let
         lines =
-            String.lines content
+            String.lines bufferContent
 
         linesBefore =
-            String.join "" <|
-                List.take cursorLine lines
+            List.take cursorLine lines
 
         currentLine =
-            String.join "" <|
-                List.take 1 <|
-                    List.drop cursorLine lines
+            currentBufferLine { cursor = cursor, bufferContent = bufferContent }
 
         linesAfter =
-            String.join "" <|
-                List.drop (cursorLine + 1) lines
+            List.drop (cursorLine + 1) lines
 
         ( beforeCurrentLine, middleCurrentLine, afterCurrentLine ) =
             splitLine cursorChar currentLine
     in
-    ( linesBefore ++ beforeCurrentLine, middleCurrentLine, afterCurrentLine ++ linesAfter )
-        |> Debug.log "triplet"
+    { linesBefore = linesBefore
+    , before = beforeCurrentLine
+    , middle = middleCurrentLine
+    , after = afterCurrentLine
+    , linesAfter = linesAfter
+    }
 
 
 splitLine : Int -> String -> ( String, String, String )

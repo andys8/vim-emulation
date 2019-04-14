@@ -13,3 +13,4 @@ action "Test" {
   uses = "actions/npm@master"
   args = "test"
 }
+

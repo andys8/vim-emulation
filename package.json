@@ -10,7 +10,7 @@
     "start": "elm-app start",
     "build": "elm-app build",
     "test": "elm-app test",
-    "deploy": "gh-pages -d build"
+    "deploy": "rm -rf build && npm run build && gh-pages -d build"
   },
   "repository": {
     "type": "git",

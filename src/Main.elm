@@ -145,14 +145,14 @@ update msg model =
                         lastLineWasDeleted =
                             cursorLine_ model.cursor >= List.length (String.lines bufferContent)
 
-                        cursor =
+                        moveCursor =
                             if lastLineWasDeleted then
-                                cursorMoveUp model.cursor
+                                cursorMoveUp >> cursorMoveLineBegin
 
                             else
-                                model.cursor
+                                cursorMoveLineBegin
                     in
-                    ( { model | bufferContent = bufferContent, cursor = cursor }, Cmd.none )
+                    ( { model | bufferContent = bufferContent, cursor = moveCursor model.cursor }, Cmd.none )
             )
                 |> Update.Extra.updateModel (\model_ -> { model_ | keyStrokes = [] })
 
@@ -168,7 +168,7 @@ view model =
             [ viewBufferNames
             , viewBuffer model
             , viewAirline model
-            , viewKeyBuffer model.allKeyStrokes
+            , viewAllKeyStrokes model.allKeyStrokes
             ]
 
 
@@ -203,8 +203,8 @@ viewBuffer { cursor, bufferContent, mode } =
 
 
 viewBufferLine : Mode -> Cursor -> Int -> String -> Element msg
-viewBufferLine mode ((Cursor cursorLine cursorChar) as cursor) lineNumber lineContent =
-    if lineNumber == cursorLine then
+viewBufferLine mode cursor lineNumber lineContent =
+    if lineNumber == cursorLine_ cursor then
         let
             (Cursor _ normalizedCursorChar) =
                 if mode == Normal then
@@ -231,10 +231,10 @@ viewAirline model =
         [ el [ Background.color (rgb255 200 200 200), padding 4 ] <| text (modeToString model.mode) ]
 
 
-viewKeyBuffer : List String -> Element msg
-viewKeyBuffer keyStrokes =
+viewAllKeyStrokes : List String -> Element msg
+viewAllKeyStrokes keyStrokes =
     row
-        [ alignBottom, Font.size 10, padding 4 ]
+        [ alignBottom, padding 4, Font.color (rgb255 170 170 170) ]
         [ text <| String.join " " keyStrokes ]
 
 
@@ -314,17 +314,25 @@ handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
         "i" :: _ ->
             ( model, [ SetMode Insert ] )
 
+        "I" :: _ ->
+            ( model, [ SetMode Insert, SetCursor (cursorMoveLineBegin cursor) ] )
+
         "a" :: _ ->
             ( model, [ SetMode Insert, SetCursor (cursorMoveRight cursor) ] )
 
         "o" :: _ ->
             ( model
-            , [ InsertNewLine (cursorLine + 1), SetMode Insert, SetCursor (cursorMoveDown cursor) ]
+            , [ InsertNewLine (cursorLine + 1), SetMode Insert, SetCursor ((cursorMoveDown >> cursorMoveLineBegin) cursor) ]
             )
 
         "O" :: _ ->
             ( model
-            , [ InsertNewLine cursorLine, SetMode Insert ]
+            , [ InsertNewLine cursorLine, SetMode Insert, SetCursor (cursorMoveLineBegin cursor) ]
+            )
+
+        "0" :: _ ->
+            ( model
+            , [ SetCursor (cursorMoveLineBegin cursor) ]
             )
 
         "h" :: _ ->
@@ -453,6 +461,11 @@ cursorMoveUp (Cursor line char) =
 cursorMoveDown : Cursor -> Cursor
 cursorMoveDown (Cursor line char) =
     Cursor (line + 1) char
+
+
+cursorMoveLineBegin : Cursor -> Cursor
+cursorMoveLineBegin (Cursor line _) =
+    Cursor line 0
 
 
 cursorChar_ : Cursor -> Int

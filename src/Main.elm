@@ -2,7 +2,7 @@ module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
 import Browser.Events
-import Element exposing (Element, alignBottom, alignTop, column, el, fill, height, layout, minimum, padding, rgb255, row, spacing, text, width)
+import Element exposing (Element, alignBottom, alignTop, column, el, fill, height, layout, minimum, padding, paddingXY, rgb255, row, text, width)
 import Element.Background as Background
 import Element.Font as Font
 import Html exposing (Html)
@@ -187,8 +187,8 @@ viewBuffer { cursor, bufferContent, mode } =
         lineNumbers =
             lines
                 |> List.indexedMap (\a _ -> a)
-                |> List.map ((+) 1 >> String.fromInt >> text)
-                |> column [ alignTop, Background.color (rgb255 240 240 240) ]
+                |> List.map ((+) 1 >> String.fromInt >> text >> el [ width fill ])
+                |> column [ Font.alignRight, paddingXY 8 0, alignTop, Background.color (rgb255 240 240 240) ]
 
         bufferLines =
             lines
@@ -196,7 +196,7 @@ viewBuffer { cursor, bufferContent, mode } =
                 |> column [ alignTop ]
     in
     row
-        [ alignTop, height fill, width fill, spacing 4 ]
+        [ alignTop, height fill, width fill ]
         [ lineNumbers
         , bufferLines
         ]
@@ -236,7 +236,7 @@ viewCursor charUnderCursor =
 viewAirline : Model -> Element msg
 viewAirline model =
     row [ alignBottom, width fill, Background.color (rgb255 222 222 222) ]
-        [ el [ Background.color (rgb255 200 200 200), padding 4 ] <| text (modeToString model.mode) ]
+        [ el [ Background.color (rgb255 200 200 200), padding 4, Font.bold ] <| text (modeToString model.mode) ]
 
 
 viewAllKeyStrokes : List String -> Element msg

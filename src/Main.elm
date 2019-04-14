@@ -203,18 +203,18 @@ viewBuffer { cursor, bufferContent, mode } =
 
 
 viewBufferLine : Mode -> Cursor -> Int -> String -> Element msg
-viewBufferLine mode (Cursor cursorLine cursorChar) lineNumber lineContent =
+viewBufferLine mode ((Cursor cursorLine cursorChar) as cursor) lineNumber lineContent =
     if lineNumber == cursorLine then
         let
-            charAt =
-                if mode == Normal && cursorChar >= String.length lineContent then
-                    String.length lineContent - 1
+            (Cursor _ normalizedCursorChar) =
+                if mode == Normal then
+                    cursorInNormalModeLine (String.length lineContent) cursor
 
                 else
-                    cursorChar
+                    cursor
 
             ( before, middle, after ) =
-                splitLine charAt lineContent
+                splitLine normalizedCursorChar lineContent
 
             cursorElement =
                 el [ Background.color (rgb255 100 100 100), Font.color (rgb255 255 255 255) ] <| text <| emptyToSpace middle
@@ -323,7 +323,7 @@ handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
 
         "h" :: _ ->
             if cursorChar > 0 then
-                ( model, [ SetCursor (cursorMoveLeft cursor) ] )
+                ( model, [ SetCursor (cursorMoveLeft (cursorInNormalModeBuffer bufferContent cursor)) ] )
 
             else
                 ( model, [] )
@@ -343,7 +343,7 @@ handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
                 ( model, [] )
 
         "l" :: _ ->
-            if cursorChar < (String.length (currentBufferLine model) - 1) then
+            if cursorChar < (String.length (currentBufferLine cursor bufferContent) - 1) then
                 ( model, [ SetCursor (cursorMoveRight cursor) ] )
 
             else
@@ -356,8 +356,8 @@ handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
             ( model, [] )
 
 
-currentBufferLine : { a | bufferContent : String, cursor : Cursor } -> String
-currentBufferLine { bufferContent, cursor } =
+currentBufferLine : Cursor -> String -> String
+currentBufferLine cursor bufferContent =
     let
         (Cursor cursorLine _) =
             cursor
@@ -398,7 +398,7 @@ splitBufferContent ((Cursor cursorLine cursorChar) as cursor) bufferContent =
             List.take cursorLine lines
 
         currentLine =
-            currentBufferLine { cursor = cursor, bufferContent = bufferContent }
+            currentBufferLine cursor bufferContent
 
         linesAfter =
             List.drop (cursorLine + 1) lines
@@ -460,3 +460,21 @@ cursorChar_ (Cursor _ cursorChar) =
 cursorLine_ : Cursor -> Int
 cursorLine_ (Cursor cursorLine _) =
     cursorLine
+
+
+cursorInNormalModeLine : Int -> Cursor -> Cursor
+cursorInNormalModeLine currentLineLength ((Cursor cursorLine cursorChar) as cursor) =
+    if cursorChar >= currentLineLength then
+        Cursor cursorLine (currentLineLength - 1)
+
+    else
+        cursor
+
+
+cursorInNormalModeBuffer : String -> Cursor -> Cursor
+cursorInNormalModeBuffer bufferContent cursor =
+    let
+        currentLineLength =
+            String.length (currentBufferLine cursor bufferContent)
+    in
+    cursorInNormalModeLine currentLineLength cursor

@@ -17,6 +17,7 @@ type alias Model =
     , bufferContent : String
     , mode : Mode
     , cursor : Cursor
+    , actionKeyStrokes : List String
     }
 
 
@@ -24,8 +25,12 @@ type Msg
     = NoOp
     | KeyDown String
     | SetMode Mode
+    | ExecuteAction Action
     | SetCursor Cursor
-    | DeleteLine Int
+
+
+type Action
+    = DeleteLine Int
 
 
 type Mode
@@ -43,6 +48,7 @@ initModel =
     , bufferContent = ""
     , mode = Normal
     , cursor = Cursor 0 0
+    , actionKeyStrokes = []
     }
 
 
@@ -77,17 +83,24 @@ update msg model =
     case msg of
         KeyDown key ->
             let
-                ( newModel, msgs ) =
-                    if model.mode == Normal then
-                        handleNormalMode model key
-
-                    else if model.mode == Insert then
-                        handleInsertMode model key
+                handleKey =
+                    if model.mode == Insert then
+                        handleInsertMode
 
                     else
-                        ( model, [] )
+                        handleNormalMode
+
+                keyStrokes =
+                    key :: model.keyStrokes
+
+                actionKeyStrokes =
+                    key :: model.actionKeyStrokes
+
+                ( newModel, msgs ) =
+                    { model | keyStrokes = keyStrokes, actionKeyStrokes = actionKeyStrokes }
+                        |> handleKey key
             in
-            ( { newModel | keyStrokes = key :: model.keyStrokes }, Cmd.none )
+            ( newModel, Cmd.none )
                 |> sequence update msgs
 
         SetMode Normal ->
@@ -107,25 +120,29 @@ update msg model =
         SetCursor cursor ->
             ( { model | cursor = cursor }, Cmd.none )
 
-        DeleteLine lineNumber ->
-            let
-                bufferContent =
-                    model.bufferContent
-                        |> String.lines
-                        |> List.Extra.removeAt lineNumber
-                        |> String.join "\n"
+        ExecuteAction action ->
+            (case action of
+                DeleteLine lineNumber ->
+                    let
+                        bufferContent =
+                            model.bufferContent
+                                |> String.lines
+                                |> List.Extra.removeAt lineNumber
+                                |> String.join "\n"
 
-                lastLineWasDeleted =
-                    cursorLine_ model.cursor >= List.length (String.lines bufferContent)
+                        lastLineWasDeleted =
+                            cursorLine_ model.cursor >= List.length (String.lines bufferContent)
 
-                cursor =
-                    if lastLineWasDeleted then
-                        cursorMoveUp model.cursor
+                        cursor =
+                            if lastLineWasDeleted then
+                                cursorMoveUp model.cursor
 
-                    else
-                        model.cursor
-            in
-            ( { model | bufferContent = bufferContent, cursor = cursor }, Cmd.none )
+                            else
+                                model.cursor
+                    in
+                    ( { model | bufferContent = bufferContent, cursor = cursor }, Cmd.none )
+            )
+                |> Update.Extra.updateModel (\model_ -> { model_ | actionKeyStrokes = [] })
 
         NoOp ->
             ( model, Cmd.none )
@@ -219,8 +236,8 @@ modeToString mode =
             "Normal"
 
 
-handleInsertMode : Model -> String -> ( Model, List Msg )
-handleInsertMode ({ bufferContent, cursor } as model) keyDown =
+handleInsertMode : String -> Model -> ( Model, List Msg )
+handleInsertMode keyDown ({ bufferContent, cursor } as model) =
     let
         ignoredKeys =
             [ "Alt", "Shift", "Meta", "Control", "ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp" ]
@@ -273,48 +290,48 @@ handleInsertMode ({ bufferContent, cursor } as model) keyDown =
         ( { model | bufferContent = newBufferContent, cursor = newCursor }, [] )
 
 
-handleNormalMode : Model -> String -> ( Model, List Msg )
-handleNormalMode ({ cursor, bufferContent, keyStrokes } as model) keyDown =
+handleNormalMode : String -> Model -> ( Model, List Msg )
+handleNormalMode keyDown ({ cursor, bufferContent, actionKeyStrokes } as model) =
     let
         (Cursor cursorLine cursorChar) =
             cursor
     in
-    case ( keyDown, keyStrokes ) of
-        ( "i", _ ) ->
+    case actionKeyStrokes of
+        "i" :: _ ->
             ( model, [ SetMode Insert ] )
 
-        ( "h", _ ) ->
+        "h" :: _ ->
             if cursorChar > 0 then
                 ( model, [ SetCursor (cursorMoveLeft cursor) ] )
 
             else
                 ( model, [] )
 
-        ( "j", _ ) ->
+        "j" :: _ ->
             if cursorLine < List.length (String.lines bufferContent) - 1 then
                 ( model, [ SetCursor (cursorMoveDown cursor) ] )
 
             else
                 ( model, [] )
 
-        ( "k", _ ) ->
+        "k" :: _ ->
             if cursorLine > 0 then
                 ( model, [ SetCursor (cursorMoveUp cursor) ] )
 
             else
                 ( model, [] )
 
-        ( "l", _ ) ->
+        "l" :: _ ->
             if cursorChar < (String.length (currentBufferLine model) - 1) then
                 ( model, [ SetCursor (cursorMoveRight cursor) ] )
 
             else
                 ( model, [] )
 
-        ( "d", "d" :: _ ) ->
-            ( model, [ DeleteLine cursorLine ] )
+        "d" :: "d" :: _ ->
+            ( model, [ ExecuteAction (DeleteLine cursorLine) ] )
 
-        ( _, _ ) ->
+        _ ->
             ( model, [] )
 
 

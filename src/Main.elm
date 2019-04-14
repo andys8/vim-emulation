@@ -89,6 +89,17 @@ update msg model =
             ( { newModel | keyStrokes = key :: model.keyStrokes }, Cmd.none )
                 |> sequence update msgs
 
+        SetMode Normal ->
+            let
+                cursor =
+                    if cursorChar_ model.cursor > 0 then
+                        cursorMoveLeft model.cursor
+
+                    else
+                        model.cursor
+            in
+            ( { model | mode = Normal, cursor = cursor }, Cmd.none )
+
         SetMode mode ->
             ( { model | mode = mode }, Cmd.none )
 
@@ -105,7 +116,7 @@ view model =
         column
             [ width fill, height fill, Font.family [ Font.monospace ] ]
             [ viewBufferNames
-            , viewBuffer model.cursor model.bufferContent
+            , viewBuffer model
             , viewAirline model
             , viewKeyBuffer model.keyStrokes
             ]
@@ -117,8 +128,8 @@ viewBufferNames =
         [ text "Buffer" ]
 
 
-viewBuffer : Cursor -> String -> Element msg
-viewBuffer cursor bufferContent =
+viewBuffer : Model -> Element msg
+viewBuffer { cursor, bufferContent, mode } =
     let
         lines =
             String.lines bufferContent
@@ -131,7 +142,7 @@ viewBuffer cursor bufferContent =
 
         bufferLines =
             lines
-                |> List.indexedMap (viewBufferLine cursor)
+                |> List.indexedMap (viewBufferLine mode cursor)
                 |> column [ alignTop ]
     in
     row
@@ -141,15 +152,15 @@ viewBuffer cursor bufferContent =
         ]
 
 
-viewBufferLine : Cursor -> Int -> String -> Element msg
-viewBufferLine (Cursor cursorLine cursorChar) lineNumber lineContent =
+viewBufferLine : Mode -> Cursor -> Int -> String -> Element msg
+viewBufferLine mode (Cursor cursorLine cursorChar) lineNumber lineContent =
     if lineNumber == cursorLine then
         let
             ( before, middle, after ) =
-                splitLine cursorChar <| emptyToSpace lineContent
+                splitLine cursorChar lineContent
 
             cursorElement =
-                el [ Background.color (rgb255 100 100 100), Font.color (rgb255 255 255 255) ] <| text middle
+                el [ Background.color (rgb255 100 100 100), Font.color (rgb255 255 255 255) ] <| text <| emptyToSpace middle
         in
         row [] [ text before, cursorElement, text after ]
 
@@ -194,7 +205,7 @@ handleInsertMode ({ bufferContent, cursor } as model) keyDown =
                 case keyDown of
                     "Enter" ->
                         ( beforeCursor ++ "\n" ++ atCursor ++ afterCursor
-                        , cursor
+                        , cursorMoveDown cursor
                         )
 
                     "Backspace" ->
@@ -316,13 +327,8 @@ splitBufferContent (Cursor cursorLine cursorChar) content =
 splitLine : Int -> String -> ( String, String, String )
 splitLine cursorChar content =
     let
-        -- The cursor can be positioned behind the last char when moved from a longer line
         charAt =
-            if cursorChar >= String.length content then
-                String.length content - 1
-
-            else
-                cursorChar
+            cursorChar
 
         before =
             String.slice 0 charAt content
@@ -354,3 +360,8 @@ cursorMoveUp (Cursor line char) =
 cursorMoveDown : Cursor -> Cursor
 cursorMoveDown (Cursor line char) =
     Cursor (line + 1) char
+
+
+cursorChar_ : Cursor -> Int
+cursorChar_ (Cursor _ cursorChar) =
+    cursorChar

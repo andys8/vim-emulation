@@ -76,18 +76,7 @@ update msg model =
     case msg of
         KeyDown key ->
             let
-                setModeCmd =
-                    case ( model.mode, key ) of
-                        ( Normal, "i" ) ->
-                            Just (SetMode Insert)
-
-                        ( Insert, "Escape" ) ->
-                            Just (SetMode Normal)
-
-                        _ ->
-                            Nothing
-
-                ( newModel, cmdList ) =
+                ( newModel, msgs ) =
                     if model.mode == Normal then
                         handleNormalMode model key
 
@@ -98,8 +87,7 @@ update msg model =
                         ( model, [] )
             in
             ( { newModel | keyStrokes = key :: model.keyStrokes }, Cmd.none )
-                |> sequence update (List.filterMap identity [ setModeCmd ])
-                |> sequence update cmdList
+                |> sequence update msgs
 
         SetMode mode ->
             ( { model | mode = mode }, Cmd.none )
@@ -194,40 +182,44 @@ modeToString mode =
 
 handleInsertMode : Model -> String -> ( Model, List Msg )
 handleInsertMode ({ bufferContent, cursor } as model) keyDown =
-    let
-        ( beforeCursor, atCursor, afterCursor ) =
-            splitBufferContent cursor bufferContent
+    if keyDown == "Escape" then
+        ( model, [ SetMode Normal ] )
 
-        ( newBufferContent, newCursor ) =
-            case keyDown of
-                "Enter" ->
-                    ( beforeCursor ++ "\n" ++ atCursor ++ afterCursor
-                    , cursor
-                    )
+    else
+        let
+            ( beforeCursor, atCursor, afterCursor ) =
+                splitBufferContent cursor bufferContent
 
-                "Backspace" ->
-                    ( String.dropRight 1 beforeCursor ++ atCursor ++ afterCursor
-                    , cursorMoveLeft cursor
-                    )
+            ( newBufferContent, newCursor ) =
+                case keyDown of
+                    "Enter" ->
+                        ( beforeCursor ++ "\n" ++ atCursor ++ afterCursor
+                        , cursor
+                        )
 
-                "Shift" ->
-                    ( bufferContent, cursor )
+                    "Backspace" ->
+                        ( String.dropRight 1 beforeCursor ++ atCursor ++ afterCursor
+                        , cursorMoveLeft cursor
+                        )
 
-                "Alt" ->
-                    ( bufferContent, cursor )
+                    "Shift" ->
+                        ( bufferContent, cursor )
 
-                "Meta" ->
-                    ( bufferContent, cursor )
+                    "Alt" ->
+                        ( bufferContent, cursor )
 
-                "Escape" ->
-                    ( bufferContent, cursor )
+                    "Meta" ->
+                        ( bufferContent, cursor )
 
-                _ ->
-                    ( beforeCursor ++ keyDown ++ atCursor ++ afterCursor
-                    , cursorMoveRight cursor
-                    )
-    in
-    ( { model | bufferContent = newBufferContent, cursor = newCursor }, [] )
+                    "Escape" ->
+                        ( bufferContent, cursor )
+
+                    _ ->
+                        ( beforeCursor ++ keyDown ++ atCursor ++ afterCursor
+                        , cursorMoveRight cursor
+                        )
+        in
+        ( { model | bufferContent = newBufferContent, cursor = newCursor }, [] )
 
 
 handleNormalMode : Model -> String -> ( Model, List Msg )
@@ -237,6 +229,9 @@ handleNormalMode ({ cursor, bufferContent } as model) keyDown =
             cursor
     in
     case keyDown of
+        "i" ->
+            ( model, [ SetMode Insert ] )
+
         "h" ->
             if cursorChar > 0 then
                 ( model, [ SetCursor (cursorMoveLeft cursor) ] )

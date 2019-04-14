@@ -15,6 +15,7 @@ type alias Model =
     { keyStrokes : List String
     , bufferContent : String
     , mode : Mode
+    , cursor : Cursor
     }
 
 
@@ -29,11 +30,16 @@ type Mode
     | Insert
 
 
+type Cursor
+    = Cursor Int Int
+
+
 initModel : Model
 initModel =
     { keyStrokes = []
     , bufferContent = ""
     , mode = Normal
+    , cursor = Cursor 0 0
     }
 
 
@@ -107,7 +113,7 @@ view model =
         column
             [ width fill, height fill, Font.family [ Font.monospace ] ]
             [ viewBufferNames
-            , viewBuffer model.bufferContent
+            , viewBuffer model.cursor model.bufferContent
             , viewAirline model
             , viewKeyBuffer model.keyStrokes
             ]
@@ -119,8 +125,8 @@ viewBufferNames =
         [ text "Buffer" ]
 
 
-viewBuffer : String -> Element msg
-viewBuffer bufferContent =
+viewBuffer : Cursor -> String -> Element msg
+viewBuffer cursor bufferContent =
     let
         lines =
             String.lines bufferContent
@@ -133,7 +139,7 @@ viewBuffer bufferContent =
 
         bufferLines =
             lines
-                |> List.map (emptyToSpace >> text)
+                |> List.indexedMap (viewBufferLine cursor)
                 |> column [ alignTop ]
     in
     row
@@ -141,6 +147,22 @@ viewBuffer bufferContent =
         [ lineNumbers
         , bufferLines
         ]
+
+
+viewBufferLine : Cursor -> Int -> String -> Element msg
+viewBufferLine (Cursor cursorLine cursorChar) lineNumber lineContent =
+    if lineNumber == cursorLine then
+        let
+            ( before, middle, after ) =
+                splitLine cursorChar lineContent
+
+            cursorElement =
+                el [ Background.color (rgb255 100 100 100), Font.color (rgb255 255 255 255) ] <| text middle
+        in
+        row [] [ text before, cursorElement, text after ]
+
+    else
+        text (emptyToSpace lineContent)
 
 
 viewAirline : Model -> Element msg
@@ -199,3 +221,18 @@ emptyToSpace s =
 
         _ ->
             s
+
+
+splitLine : Int -> String -> ( String, String, String )
+splitLine charAt content =
+    let
+        before =
+            String.slice 0 charAt content
+
+        middle =
+            String.slice charAt (charAt + 1) content
+
+        after =
+            String.slice (charAt + 1) (String.length content) content
+    in
+    ( before, middle, after )

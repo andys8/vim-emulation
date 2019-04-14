@@ -13,11 +13,11 @@ import Update.Extra exposing (sequence)
 
 
 type alias Model =
-    { keyStrokes : List String
+    { allKeyStrokes : List String
     , bufferContent : String
     , mode : Mode
     , cursor : Cursor
-    , actionKeyStrokes : List String
+    , keyStrokes : List String
     }
 
 
@@ -44,11 +44,11 @@ type Cursor
 
 initModel : Model
 initModel =
-    { keyStrokes = []
+    { allKeyStrokes = []
     , bufferContent = ""
     , mode = Normal
     , cursor = Cursor 0 0
-    , actionKeyStrokes = []
+    , keyStrokes = []
     }
 
 
@@ -90,14 +90,14 @@ update msg model =
                     else
                         handleNormalMode
 
+                allKeyStrokes =
+                    key :: model.allKeyStrokes
+
                 keyStrokes =
                     key :: model.keyStrokes
 
-                actionKeyStrokes =
-                    key :: model.actionKeyStrokes
-
                 ( newModel, msgs ) =
-                    { model | keyStrokes = keyStrokes, actionKeyStrokes = actionKeyStrokes }
+                    { model | allKeyStrokes = allKeyStrokes, keyStrokes = keyStrokes }
                         |> handleKey key
             in
             ( newModel, Cmd.none )
@@ -142,7 +142,7 @@ update msg model =
                     in
                     ( { model | bufferContent = bufferContent, cursor = cursor }, Cmd.none )
             )
-                |> Update.Extra.updateModel (\model_ -> { model_ | actionKeyStrokes = [] })
+                |> Update.Extra.updateModel (\model_ -> { model_ | keyStrokes = [] })
 
         NoOp ->
             ( model, Cmd.none )
@@ -156,7 +156,7 @@ view model =
             [ viewBufferNames
             , viewBuffer model
             , viewAirline model
-            , viewKeyBuffer model.keyStrokes
+            , viewKeyBuffer model.allKeyStrokes
             ]
 
 
@@ -255,7 +255,6 @@ handleInsertMode keyDown ({ bufferContent, cursor } as model) =
 
             { linesBefore, before, middle, after, linesAfter } =
                 splitBufferContent cursor bufferContent
-                    |> Debug.log "before"
 
             ( newCurrentLine, newCursor ) =
                 case keyDown of
@@ -282,21 +281,21 @@ handleInsertMode keyDown ({ bufferContent, cursor } as model) =
                         )
 
             newBufferContent =
-                linesBefore ++ [ newCurrentLine ] ++ linesAfter |> String.join "\n"
-
-            _ =
-                Debug.log "after" (splitBufferContent newCursor newBufferContent)
+                linesBefore
+                    ++ newCurrentLine
+                    :: linesAfter
+                    |> String.join "\n"
         in
         ( { model | bufferContent = newBufferContent, cursor = newCursor }, [] )
 
 
 handleNormalMode : String -> Model -> ( Model, List Msg )
-handleNormalMode keyDown ({ cursor, bufferContent, actionKeyStrokes } as model) =
+handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
     let
         (Cursor cursorLine cursorChar) =
             cursor
     in
-    case actionKeyStrokes of
+    case keyStrokes of
         "i" :: _ ->
             ( model, [ SetMode Insert ] )
 

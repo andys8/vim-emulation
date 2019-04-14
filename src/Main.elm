@@ -27,6 +27,7 @@ type Msg
     | SetMode Mode
     | ExecuteAction Action
     | SetCursor Cursor
+    | InsertNewLine Int
 
 
 type Action
@@ -119,6 +120,17 @@ update msg model =
 
         SetCursor cursor ->
             ( { model | cursor = cursor }, Cmd.none )
+
+        InsertNewLine lineNumber ->
+            let
+                ( linesBefore, linesAfter ) =
+                    String.lines model.bufferContent
+                        |> List.Extra.splitAt lineNumber
+
+                bufferContent =
+                    linesBefore ++ "" :: linesAfter |> String.join "\n"
+            in
+            ( { model | bufferContent = bufferContent }, Cmd.none )
 
         ExecuteAction action ->
             (case action of
@@ -298,6 +310,16 @@ handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
     case keyStrokes of
         "i" :: _ ->
             ( model, [ SetMode Insert ] )
+
+        "o" :: _ ->
+            ( model
+            , [ InsertNewLine (cursorLine + 1), SetMode Insert, SetCursor (cursorMoveDown cursor) ]
+            )
+
+        "O" :: _ ->
+            ( model
+            , [ InsertNewLine cursorLine, SetMode Insert ]
+            )
 
         "h" :: _ ->
             if cursorChar > 0 then

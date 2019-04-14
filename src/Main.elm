@@ -2,7 +2,7 @@ module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
 import Browser.Events
-import Element exposing (Element, alignBottom, alignTop, column, el, fill, height, layout, padding, rgb255, row, spacing, text, width)
+import Element exposing (Element, alignBottom, alignTop, column, el, fill, height, layout, minimum, padding, rgb255, row, spacing, text, width)
 import Element.Background as Background
 import Element.Font as Font
 import Html exposing (Html)
@@ -164,7 +164,7 @@ view : Model -> Html Msg
 view model =
     Element.layout [ height fill, width fill ] <|
         column
-            [ width fill, height fill, Font.family [ Font.monospace ] ]
+            [ width fill, height fill, Font.family [ Font.monospace ], Font.size fontSize ]
             [ viewBufferNames
             , viewBuffer model
             , viewAirline model
@@ -215,14 +215,21 @@ viewBufferLine mode cursor lineNumber lineContent =
 
             ( before, middle, after ) =
                 splitLine normalizedCursorChar lineContent
-
-            cursorElement =
-                el [ Background.color (rgb255 100 100 100), Font.color (rgb255 255 255 255) ] <| text <| emptyToSpace middle
         in
-        row [] [ text before, cursorElement, text after ]
+        row [ height (minimum fontSize fill) ] [ text before, viewCursor middle, text after ]
 
     else
-        text (emptyToSpace lineContent)
+        el [ height (minimum fontSize fill) ] <| text lineContent
+
+
+viewCursor : String -> Element msg
+viewCursor charUnderCursor =
+    el [ Background.color (rgb255 100 100 100), Font.color (rgb255 255 255 255) ] <|
+        if String.isEmpty charUnderCursor then
+            text " "
+
+        else
+            text charUnderCursor
 
 
 viewAirline : Model -> Element msg
@@ -380,16 +387,6 @@ currentBufferLine cursor bufferContent =
         |> Maybe.withDefault ""
 
 
-emptyToSpace : String -> String
-emptyToSpace s =
-    case s of
-        "" ->
-            " "
-
-        _ ->
-            s
-
-
 splitBufferContent :
     Cursor
     -> String
@@ -494,3 +491,8 @@ cursorInNormalModeBuffer bufferContent cursor =
             String.length (currentBufferLine cursor bufferContent)
     in
     cursorInNormalModeLine currentLineLength cursor
+
+
+fontSize : Int
+fontSize =
+    20

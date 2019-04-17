@@ -272,70 +272,61 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
     let
         (Cursor cursorLine cursorChar) =
             cursor
+
+        msgs =
+            case keyStrokes of
+                "d" :: "d" :: _ ->
+                    [ YankLine cursorLine, DeleteLine cursorLine, ActionExecuted ]
+
+                "y" :: "y" :: _ ->
+                    [ YankLine cursorLine, ActionExecuted ]
+
+                "i" :: _ ->
+                    [ SetMode Insert ]
+
+                "I" :: _ ->
+                    [ SetMode Insert, MoveCursor LineBegin ]
+
+                "a" :: _ ->
+                    [ SetMode Insert, MoveCursor Right ]
+
+                "A" :: _ ->
+                    [ SetMode Insert, MoveCursor LineEnd ]
+
+                "p" :: _ ->
+                    [ PasteAfter, MoveCursor Down, MoveCursor FirstNonBlankChar ]
+
+                "P" :: _ ->
+                    [ PasteBefore ]
+
+                "o" :: _ ->
+                    [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]
+
+                "O" :: _ ->
+                    [ InsertNewLine cursorLine, SetMode Insert, MoveCursor LineBegin ]
+
+                "0" :: _ ->
+                    [ MoveCursor LineBegin ]
+
+                "$" :: _ ->
+                    [ MoveCursor LineEnd ]
+
+                "h" :: _ ->
+                    [ MoveCursor Left ]
+
+                "j" :: _ ->
+                    [ MoveCursor Down ]
+
+                "k" :: _ ->
+                    [ MoveCursor Up ]
+
+                "l" :: _ ->
+                    [ MoveCursor Right ]
+
+                _ ->
+                    []
     in
-    case keyStrokes of
-        "d" :: "d" :: _ ->
-            ( model, [ YankLine cursorLine, DeleteLine cursorLine, ActionExecuted ] )
-
-        "y" :: "y" :: _ ->
-            ( model, [ YankLine cursorLine, ActionExecuted ] )
-
-        "i" :: _ ->
-            ( model, [ SetMode Insert ] )
-
-        "I" :: _ ->
-            ( model, [ SetMode Insert, MoveCursor LineBegin ] )
-
-        "a" :: _ ->
-            ( model, [ SetMode Insert, MoveCursor Right ] )
-
-        "A" :: _ ->
-            ( model, [ SetMode Insert, MoveCursor LineEnd ] )
-
-        "p" :: _ ->
-            ( model, [ PasteAfter, MoveCursor Down, MoveCursor FirstNonBlankChar ] )
-
-        "P" :: _ ->
-            ( model, [ PasteBefore ] )
-
-        "o" :: _ ->
-            ( model
-            , [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]
-            )
-
-        "O" :: _ ->
-            ( model
-            , [ InsertNewLine cursorLine, SetMode Insert, MoveCursor LineBegin ]
-            )
-
-        "0" :: _ ->
-            ( model
-            , [ MoveCursor LineBegin ]
-            )
-
-        "$" :: _ ->
-            ( model
-            , [ MoveCursor LineEnd ]
-            )
-
-        "h" :: _ ->
-            if cursorChar > 0 then
-                ( model, [ SetCursor (cursorMoveLeft (cursorInNormalModeBuffer buffer cursor)) ] )
-
-            else
-                ( model, [] )
-
-        "j" :: _ ->
-            ( model, [ MoveCursor Down ] )
-
-        "k" :: _ ->
-            ( model, [ MoveCursor Up ] )
-
-        "l" :: _ ->
-            ( model, [ MoveCursor Right ] )
-
-        _ ->
-            ( model, [] )
+    ( model, msgs )
 
 
 

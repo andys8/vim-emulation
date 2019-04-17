@@ -248,6 +248,11 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
                     "Delete" ->
                         ( before ++ after, cursor )
 
+                    "Tab" ->
+                        ( before ++ "\t" ++ middle ++ after
+                        , cursorMoveRight cursor
+                        )
+
                     _ ->
                         ( before ++ keyDown ++ middle ++ after
                         , cursorMoveRight cursor

@@ -1,12 +1,12 @@
 module Main exposing (main, update)
 
 import Browser
-import Browser.Events
+import Browser.Dom
 import Buffer exposing (..)
-import Json.Decode as Decode exposing (Decoder)
 import List.Extra
 import Model exposing (Buffer(..), Cursor(..), CursorDirection(..), Mode(..), Model, Msg(..), initModel)
-import Platform.Sub as Sub exposing (Sub)
+import Platform.Sub as Sub
+import Task
 import Update.Extra exposing (sequence)
 import View exposing (view)
 
@@ -17,25 +17,16 @@ main =
         { view = view
         , init = \_ -> init
         , update = update
-        , subscriptions = \_ -> sub
+        , subscriptions = \_ -> Sub.none
         }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( initModel, Cmd.none )
-
-
-sub : Sub Msg
-sub =
-    keyDecoder
-        |> Browser.Events.onKeyDown
-        |> Sub.map KeyDown
-
-
-keyDecoder : Decoder String
-keyDecoder =
-    Decode.field "key" Decode.string
+    ( initModel
+    , Browser.Dom.focus "outermost"
+        |> Task.attempt (always NoOp)
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -240,10 +231,11 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
                     "Delete" ->
                         ( before ++ after, [] )
 
+                    "Tab" ->
+                        ( before ++ "  " ++ middle ++ after, [ MoveCursor Right, MoveCursor Right ] )
+
                     _ ->
-                        ( before ++ keyDown ++ middle ++ after
-                        , [ MoveCursor Right ]
-                        )
+                        ( before ++ keyDown ++ middle ++ after, [ MoveCursor Right ] )
 
             buffer_ =
                 linesBefore
@@ -347,7 +339,6 @@ ignoredKeysInInsertMode =
     , "PageDown"
     , "PageUp"
     , "Shift"
-    , "Tab"
     ]
 
 

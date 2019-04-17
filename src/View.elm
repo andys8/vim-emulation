@@ -5,14 +5,35 @@ import Element exposing (..)
 import Element.Background as Background
 import Element.Font as Font
 import Html exposing (Html)
-import Model exposing (Cursor(..), Mode(..), Model, Msg)
+import Html.Attributes exposing (id, tabindex)
+import Html.Events exposing (preventDefaultOn)
+import Json.Decode as Decode
+import Model exposing (Cursor(..), Mode(..), Model, Msg(..))
+
+
+onKeyDown : Html.Attribute Msg
+onKeyDown =
+    Decode.field "key" Decode.string
+        |> Decode.map (\m -> ( KeyDown m, True ))
+        |> preventDefaultOn "keydown"
 
 
 view : Model -> Html Msg
 view model =
-    Element.layout [ height fill, width fill ] <|
+    Element.layout
+        [ height fill
+        , width fill
+        , htmlAttribute onKeyDown
+        , htmlAttribute <| tabindex 0
+        , htmlAttribute <| id "outermost"
+        ]
+    <|
         column
-            [ width fill, height fill, Font.family [ Font.monospace ], Font.size fontSize ]
+            [ width fill
+            , height fill
+            , Font.family [ Font.monospace ]
+            , Font.size fontSize
+            ]
             [ viewBufferNames
             , viewBuffer model
             , viewAirline model

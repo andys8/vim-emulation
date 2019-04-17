@@ -225,28 +225,24 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
             { linesBefore, before, middle, after, linesAfter } =
                 splitBufferContent cursor buffer
 
-            ( newCurrentLine, newCursor ) =
+            ( newCurrentLine, msgs ) =
                 case keyDown of
                     "Enter" ->
                         ( before ++ "\n" ++ middle ++ after
-                        , Cursor (cursorLine + 1) 0
+                        , [ MoveCursor Down, MoveCursor LineBegin ]
                         )
 
                     "Backspace" ->
                         ( String.dropRight 1 before ++ middle ++ after
-                        , if cursorChar > 0 then
-                            cursorMoveLeft cursor
-
-                          else
-                            cursor
+                        , [ SetCursor <| ifThenElse (cursorChar > 0) (cursorMoveLeft cursor) cursor ]
                         )
 
                     "Delete" ->
-                        ( before ++ after, cursor )
+                        ( before ++ after, [] )
 
                     _ ->
                         ( before ++ keyDown ++ middle ++ after
-                        , cursorMoveRight cursor
+                        , [ MoveCursor Right ]
                         )
 
             buffer_ =
@@ -255,7 +251,7 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
                     :: linesAfter
                     |> String.join "\n"
         in
-        ( { model | buffer = Buffer buffer_, cursor = newCursor }, [] )
+        ( { model | buffer = Buffer buffer_ }, msgs )
 
 
 handleNormalMode : String -> Model -> ( Model, List Msg )
@@ -321,19 +317,6 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
 
 
 
--- helper
-
-
-ifThenElse : Bool -> a -> a -> a
-ifThenElse pred then_ else_ =
-    if pred then
-        then_
-
-    else
-        else_
-
-
-
 -- Contstants
 
 
@@ -366,3 +349,16 @@ ignoredKeysInInsertMode =
     , "Shift"
     , "Tab"
     ]
+
+
+
+-- helper
+
+
+ifThenElse : Bool -> a -> a -> a
+ifThenElse pred then_ else_ =
+    if pred then
+        then_
+
+    else
+        else_

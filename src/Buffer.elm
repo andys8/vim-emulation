@@ -1,5 +1,6 @@
 module Buffer exposing
-    ( currentBufferLine
+    ( bufferToLines
+    , currentBufferLine
     , cursorChar_
     , cursorInNormalModeBuffer
     , cursorInNormalModeLine
@@ -18,14 +19,16 @@ import List.Extra
 import Model exposing (..)
 
 
-currentBufferLine : Cursor -> String -> String
-currentBufferLine cursor bufferContent =
-    let
-        (Cursor cursorLine _) =
-            cursor
-    in
-    String.lines bufferContent
-        |> List.Extra.getAt cursorLine
+bufferToLines : Buffer -> List String
+bufferToLines (Buffer buffer) =
+    String.lines buffer
+
+
+currentBufferLine : Cursor -> Buffer -> String
+currentBufferLine cursor buffer =
+    buffer
+        |> bufferToLines
+        |> List.Extra.getAt (cursorLine_ cursor)
         -- Note: Not sure if this is a good idea.
         -- Shouldn't be possible and maybe handling is overhead, but defaulting can lead to errors.
         |> Maybe.withDefault ""
@@ -33,7 +36,7 @@ currentBufferLine cursor bufferContent =
 
 splitBufferContent :
     Cursor
-    -> String
+    -> Buffer
     ->
         { linesBefore : List String
         , before : String
@@ -41,16 +44,16 @@ splitBufferContent :
         , after : String
         , linesAfter : List String
         }
-splitBufferContent ((Cursor cursorLine cursorChar) as cursor) bufferContent =
+splitBufferContent ((Cursor cursorLine cursorChar) as cursor) buffer =
     let
         lines =
-            String.lines bufferContent
+            bufferToLines buffer
 
         linesBefore =
             List.take cursorLine lines
 
         currentLine =
-            currentBufferLine cursor bufferContent
+            currentBufferLine cursor buffer
 
         linesAfter =
             List.drop (cursorLine + 1) lines
@@ -93,20 +96,20 @@ cursorInNormalModeLine currentLineLength ((Cursor cursorLine cursorChar) as curs
         cursor
 
 
-cursorInNormalModeBuffer : String -> Cursor -> Cursor
-cursorInNormalModeBuffer bufferContent cursor =
+cursorInNormalModeBuffer : Buffer -> Cursor -> Cursor
+cursorInNormalModeBuffer buffer cursor =
     let
         currentLineLength =
-            String.length (currentBufferLine cursor bufferContent)
+            String.length (currentBufferLine cursor buffer)
     in
     cursorInNormalModeLine currentLineLength cursor
 
 
-cursorMoveToEndOfLine : String -> Cursor -> Cursor
-cursorMoveToEndOfLine bufferContent cursor =
+cursorMoveToEndOfLine : Buffer -> Cursor -> Cursor
+cursorMoveToEndOfLine buffer cursor =
     let
         cursorChar =
-            String.length <| currentBufferLine cursor bufferContent
+            String.length <| currentBufferLine cursor buffer
     in
     Cursor (cursorLine_ cursor) cursorChar
 

@@ -1,6 +1,6 @@
 module View exposing (view)
 
-import Buffer exposing (cursorInNormalModeLine, cursorLine_, splitLine)
+import Buffer exposing (bufferToLines, cursorInNormalModeLine, cursorLine_, splitLine)
 import Element exposing (..)
 import Element.Background as Background
 import Element.Font as Font
@@ -27,10 +27,10 @@ viewBufferNames =
 
 
 viewBuffer : Model -> Element msg
-viewBuffer { cursor, bufferContent, mode } =
+viewBuffer { cursor, buffer, mode } =
     let
         lines =
-            String.lines bufferContent
+            bufferToLines buffer
 
         lineNumbers =
             lines

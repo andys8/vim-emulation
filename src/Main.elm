@@ -5,7 +5,7 @@ import Browser.Events
 import Buffer exposing (..)
 import Json.Decode as Decode exposing (Decoder)
 import List.Extra
-import Model exposing (Action(..), Cursor(..), Mode(..), Model, Msg(..), initModel)
+import Model exposing (Action(..), Buffer(..), Cursor(..), Mode(..), Model, Msg(..), initModel)
 import Platform.Sub as Sub exposing (Sub)
 import Update.Extra exposing (sequence)
 import View exposing (view)
@@ -83,26 +83,27 @@ update msg model =
         InsertNewLine lineNumber ->
             let
                 ( linesBefore, linesAfter ) =
-                    String.lines model.bufferContent
+                    model.buffer
+                        |> bufferToLines
                         |> List.Extra.splitAt lineNumber
 
-                bufferContent =
+                buffer =
                     linesBefore ++ "" :: linesAfter |> String.join "\n"
             in
-            ( { model | bufferContent = bufferContent }, Cmd.none )
+            ( { model | buffer = Buffer buffer }, Cmd.none )
 
         ExecuteAction action ->
             (case action of
                 DeleteLine lineNumber ->
                     let
-                        bufferContent =
-                            model.bufferContent
-                                |> String.lines
+                        buffer =
+                            model.buffer
+                                |> bufferToLines
                                 |> List.Extra.removeAt lineNumber
                                 |> String.join "\n"
 
                         lastLineWasDeleted =
-                            cursorLine_ model.cursor >= List.length (String.lines bufferContent)
+                            cursorLine_ model.cursor >= List.length (String.lines buffer)
 
                         moveCursor =
                             if lastLineWasDeleted then
@@ -111,7 +112,7 @@ update msg model =
                             else
                                 cursorMoveLineBegin
                     in
-                    ( { model | bufferContent = bufferContent, cursor = moveCursor model.cursor }, Cmd.none )
+                    ( { model | buffer = Buffer buffer, cursor = moveCursor model.cursor }, Cmd.none )
             )
                 |> Update.Extra.updateModel (\model_ -> { model_ | keyStrokes = [] })
 
@@ -120,7 +121,7 @@ update msg model =
 
 
 handleInsertMode : String -> Model -> ( Model, List Msg )
-handleInsertMode keyDown ({ bufferContent, cursor } as model) =
+handleInsertMode keyDown ({ buffer, cursor } as model) =
     let
         ignoredKeys =
             [ "Alt", "Shift", "Meta", "Control", "ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp" ]
@@ -137,7 +138,7 @@ handleInsertMode keyDown ({ bufferContent, cursor } as model) =
                 cursor
 
             { linesBefore, before, middle, after, linesAfter } =
-                splitBufferContent cursor bufferContent
+                splitBufferContent cursor buffer
 
             ( newCurrentLine, newCursor ) =
                 case keyDown of
@@ -163,17 +164,17 @@ handleInsertMode keyDown ({ bufferContent, cursor } as model) =
                         , cursorMoveRight cursor
                         )
 
-            newBufferContent =
+            buffer_ =
                 linesBefore
                     ++ newCurrentLine
                     :: linesAfter
                     |> String.join "\n"
         in
-        ( { model | bufferContent = newBufferContent, cursor = newCursor }, [] )
+        ( { model | buffer = Buffer buffer_, cursor = newCursor }, [] )
 
 
 handleNormalMode : String -> Model -> ( Model, List Msg )
-handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
+handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
     let
         (Cursor cursorLine cursorChar) =
             cursor
@@ -192,7 +193,7 @@ handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
             ( model, [ SetMode Insert, SetCursor (cursorMoveRight cursor) ] )
 
         "A" :: _ ->
-            ( model, [ SetMode Insert, SetCursor (cursorMoveToEndOfLine bufferContent cursor) ] )
+            ( model, [ SetMode Insert, SetCursor (cursorMoveToEndOfLine buffer cursor) ] )
 
         "o" :: _ ->
             ( model
@@ -211,13 +212,13 @@ handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
 
         "h" :: _ ->
             if cursorChar > 0 then
-                ( model, [ SetCursor (cursorMoveLeft (cursorInNormalModeBuffer bufferContent cursor)) ] )
+                ( model, [ SetCursor (cursorMoveLeft (cursorInNormalModeBuffer buffer cursor)) ] )
 
             else
                 ( model, [] )
 
         "j" :: _ ->
-            if cursorLine < List.length (String.lines bufferContent) - 1 then
+            if cursorLine < List.length (bufferToLines buffer) - 1 then
                 ( model, [ SetCursor (cursorMoveDown cursor) ] )
 
             else
@@ -231,7 +232,7 @@ handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
                 ( model, [] )
 
         "l" :: _ ->
-            if cursorChar < (String.length (currentBufferLine cursor bufferContent) - 1) then
+            if cursorChar < (String.length (currentBufferLine cursor buffer) - 1) then
                 ( model, [ SetCursor (cursorMoveRight cursor) ] )
 
             else

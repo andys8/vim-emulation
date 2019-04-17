@@ -1,9 +1,9 @@
-module Model exposing (Action(..), Cursor(..), Mode(..), Model, Msg(..), initModel)
+module Model exposing (Action(..), Buffer(..), Cursor(..), Mode(..), Model, Msg(..), initModel)
 
 
 type alias Model =
     { allKeyStrokes : List String
-    , bufferContent : String
+    , buffer : Buffer
     , mode : Mode
     , cursor : Cursor
     , keyStrokes : List String
@@ -13,7 +13,7 @@ type alias Model =
 initModel : Model
 initModel =
     { allKeyStrokes = []
-    , bufferContent = ""
+    , buffer = Buffer ""
     , mode = Normal
     , cursor = Cursor 0 0
     , keyStrokes = []
@@ -27,6 +27,10 @@ type Msg
     | ExecuteAction Action
     | SetCursor Cursor
     | InsertNewLine Int
+
+
+type Buffer
+    = Buffer String
 
 
 type Action

@@ -211,14 +211,10 @@ update msg model =
 
 handleInsertMode : String -> Model -> ( Model, List Msg )
 handleInsertMode keyDown ({ buffer, cursor } as model) =
-    let
-        ignoredKeys =
-            [ "Alt", "Shift", "Meta", "Control", "ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp" ]
-    in
     if keyDown == "Escape" then
         ( model, [ SetMode Normal ] )
 
-    else if List.member keyDown ignoredKeys then
+    else if List.member keyDown ignoredKeysInInsertMode then
         ( model, [] )
 
     else
@@ -247,11 +243,6 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
 
                     "Delete" ->
                         ( before ++ after, cursor )
-
-                    "Tab" ->
-                        ( before ++ "\t" ++ middle ++ after
-                        , cursorMoveRight cursor
-                        )
 
                     _ ->
                         ( before ++ keyDown ++ middle ++ after
@@ -340,3 +331,38 @@ ifThenElse pred then_ else_ =
 
     else
         else_
+
+
+
+-- Contstants
+
+
+ignoredKeysInInsertMode : List String
+ignoredKeysInInsertMode =
+    [ "Alt"
+    , "AltGraph"
+    , "ArrowDown"
+    , "ArrowLeft"
+    , "ArrowRight"
+    , "ArrowUp"
+    , "Control"
+    , "F1"
+    , "F10"
+    , "F11"
+    , "F12"
+    , "F2"
+    , "F2"
+    , "F3"
+    , "F4"
+    , "F5"
+    , "F6"
+    , "F7"
+    , "F8"
+    , "F9"
+    , "Insert"
+    , "Meta"
+    , "PageDown"
+    , "PageUp"
+    , "Shift"
+    , "Tab"
+    ]

@@ -191,6 +191,9 @@ handleNormalMode _ ({ cursor, bufferContent, keyStrokes } as model) =
         "a" :: _ ->
             ( model, [ SetMode Insert, SetCursor (cursorMoveRight cursor) ] )
 
+        "A" :: _ ->
+            ( model, [ SetMode Insert, SetCursor (cursorMoveToEndOfLine bufferContent cursor) ] )
+
         "o" :: _ ->
             ( model
             , [ InsertNewLine (cursorLine + 1), SetMode Insert, SetCursor ((cursorMoveDown >> cursorMoveLineBegin) cursor) ]

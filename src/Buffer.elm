@@ -8,6 +8,7 @@ module Buffer exposing
     , cursorMoveLeft
     , cursorMoveLineBegin
     , cursorMoveRight
+    , cursorMoveToEndOfLine
     , cursorMoveUp
     , splitBufferContent
     , splitLine
@@ -99,6 +100,15 @@ cursorInNormalModeBuffer bufferContent cursor =
             String.length (currentBufferLine cursor bufferContent)
     in
     cursorInNormalModeLine currentLineLength cursor
+
+
+cursorMoveToEndOfLine : String -> Cursor -> Cursor
+cursorMoveToEndOfLine bufferContent cursor =
+    let
+        cursorChar =
+            String.length <| currentBufferLine cursor bufferContent
+    in
+    Cursor (cursorLine_ cursor) cursorChar
 
 
 cursorMoveRight : Cursor -> Cursor

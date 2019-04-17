@@ -297,7 +297,7 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
                     [ PasteAfter, MoveCursor Down, MoveCursor FirstNonBlankChar ]
 
                 "P" :: _ ->
-                    [ PasteBefore ]
+                    [ PasteBefore, MoveCursor FirstNonBlankChar ]
 
                 "o" :: _ ->
                     [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]

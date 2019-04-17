@@ -1,4 +1,4 @@
-module Model exposing (Action(..), Buffer(..), Cursor(..), Mode(..), Model, Msg(..), initModel)
+module Model exposing (Buffer(..), Cursor(..), CursorDirection(..), Mode(..), Model, Msg(..), initModel)
 
 
 type alias Model =
@@ -7,6 +7,7 @@ type alias Model =
     , mode : Mode
     , cursor : Cursor
     , keyStrokes : List String
+    , register : String
     }
 
 
@@ -17,6 +18,7 @@ initModel =
     , mode = Normal
     , cursor = Cursor 0 0
     , keyStrokes = []
+    , register = ""
     }
 
 
@@ -24,17 +26,28 @@ type Msg
     = NoOp
     | KeyDown String
     | SetMode Mode
-    | ExecuteAction Action
     | SetCursor Cursor
+    | ActionExecuted
     | InsertNewLine Int
+    | YankLine Int
+    | DeleteLine Int
+    | PasteBefore
+    | PasteAfter
+    | MoveCursor CursorDirection
+
+
+type CursorDirection
+    = Up
+    | Down
+    | Right
+    | Left
+    | LineBegin
+    | LineEnd
+    | FirstNonBlankChar
 
 
 type Buffer
     = Buffer String
-
-
-type Action
-    = DeleteLine Int
 
 
 type Mode

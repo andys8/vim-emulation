@@ -5,7 +5,7 @@ import Browser.Events
 import Buffer exposing (..)
 import Json.Decode as Decode exposing (Decoder)
 import List.Extra
-import Model exposing (Action(..), Buffer(..), Cursor(..), Mode(..), Model, Msg(..), initModel)
+import Model exposing (Buffer(..), Cursor(..), CursorDirection(..), Mode(..), Model, Msg(..), initModel)
 import Platform.Sub as Sub exposing (Sub)
 import Update.Extra exposing (sequence)
 import View exposing (view)
@@ -41,6 +41,9 @@ keyDecoder =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
         KeyDown key ->
             let
                 handleKey =
@@ -92,32 +95,118 @@ update msg model =
             in
             ( { model | buffer = Buffer buffer }, Cmd.none )
 
-        ExecuteAction action ->
-            (case action of
-                DeleteLine lineNumber ->
-                    let
-                        buffer =
-                            model.buffer
-                                |> bufferToLines
-                                |> List.Extra.removeAt lineNumber
-                                |> String.join "\n"
+        ActionExecuted ->
+            ( { model | keyStrokes = [] }, Cmd.none )
 
-                        lastLineWasDeleted =
-                            cursorLine_ model.cursor >= List.length (String.lines buffer)
+        YankLine lineNumber ->
+            let
+                line =
+                    model.buffer
+                        |> bufferToLines
+                        |> List.Extra.getAt lineNumber
+                        |> Maybe.withDefault ""
+            in
+            ( { model | register = line }, Cmd.none )
 
-                        moveCursor =
-                            if lastLineWasDeleted then
-                                cursorMoveUp >> cursorMoveLineBegin
+        PasteBefore ->
+            -- Note: This is implemented for single lines only
+            let
+                ( beforeLines, afterLines ) =
+                    List.Extra.splitAt (cursorLine_ model.cursor) (bufferToLines model.buffer)
 
-                            else
-                                cursorMoveLineBegin
-                    in
-                    ( { model | buffer = Buffer buffer, cursor = moveCursor model.cursor }, Cmd.none )
-            )
-                |> Update.Extra.updateModel (\model_ -> { model_ | keyStrokes = [] })
+                buffer =
+                    beforeLines
+                        ++ model.register
+                        :: afterLines
+                        |> String.join "\n"
+                        |> Buffer
+            in
+            ( { model | buffer = buffer }, Cmd.none )
 
-        NoOp ->
-            ( model, Cmd.none )
+        PasteAfter ->
+            -- Note: This is implemented for single lines only
+            let
+                ( beforeLines, afterLines ) =
+                    List.Extra.splitAt (cursorLine_ model.cursor + 1) (bufferToLines model.buffer)
+
+                buffer =
+                    beforeLines
+                        ++ model.register
+                        :: afterLines
+                        |> String.join "\n"
+                        |> Buffer
+            in
+            ( { model | buffer = buffer }, Cmd.none )
+
+        DeleteLine lineNumber ->
+            let
+                buffer =
+                    model.buffer
+                        |> bufferToLines
+                        |> List.Extra.removeAt lineNumber
+                        |> String.join "\n"
+
+                lastLineWasDeleted =
+                    cursorLine_ model.cursor >= List.length (String.lines buffer)
+
+                moveCursor =
+                    if lastLineWasDeleted then
+                        cursorMoveUp >> cursorMoveLineBegin
+
+                    else
+                        cursorMoveLineBegin
+            in
+            ( { model | buffer = Buffer buffer, cursor = moveCursor model.cursor }, Cmd.none )
+
+        MoveCursor direction ->
+            let
+                (Cursor line char) =
+                    model.cursor
+
+                cursor =
+                    case direction of
+                        Up ->
+                            ifThenElse
+                                (line > 0)
+                                (Cursor (line - 1) char)
+                                model.cursor
+
+                        Down ->
+                            ifThenElse
+                                (line < List.length (bufferToLines model.buffer) - 1)
+                                (Cursor (line + 1) char)
+                                model.cursor
+
+                        Right ->
+                            let
+                                lastChar =
+                                    lastCharIndexInLine model.cursor model.buffer
+                            in
+                            ifThenElse
+                                (char < lastChar || (model.mode == Insert && char <= lastChar))
+                                (Cursor line (char + 1))
+                                model.cursor
+
+                        Left ->
+                            ifThenElse (char > 0)
+                                (cursorMoveLeft (cursorInNormalModeBuffer model.buffer model.cursor))
+                                model.cursor
+
+                        LineBegin ->
+                            Cursor line 0
+
+                        LineEnd ->
+                            let
+                                lastChar =
+                                    lastCharIndexInLine model.cursor model.buffer
+                            in
+                            Cursor line (ifThenElse (model.mode == Insert) (lastChar + 1) lastChar)
+
+                        FirstNonBlankChar ->
+                            -- TODO: Find first non blank
+                            Cursor line 0
+            in
+            ( { model | cursor = cursor }, Cmd.none )
 
 
 handleInsertMode : String -> Model -> ( Model, List Msg )
@@ -181,33 +270,47 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
     in
     case keyStrokes of
         "d" :: "d" :: _ ->
-            ( model, [ ExecuteAction (DeleteLine cursorLine) ] )
+            ( model, [ YankLine cursorLine, DeleteLine cursorLine, ActionExecuted ] )
+
+        "y" :: "y" :: _ ->
+            ( model, [ YankLine cursorLine, ActionExecuted ] )
 
         "i" :: _ ->
             ( model, [ SetMode Insert ] )
 
         "I" :: _ ->
-            ( model, [ SetMode Insert, SetCursor (cursorMoveLineBegin cursor) ] )
+            ( model, [ SetMode Insert, MoveCursor LineBegin ] )
 
         "a" :: _ ->
-            ( model, [ SetMode Insert, SetCursor (cursorMoveRight cursor) ] )
+            ( model, [ SetMode Insert, MoveCursor Right ] )
 
         "A" :: _ ->
-            ( model, [ SetMode Insert, SetCursor (cursorMoveToEndOfLine buffer cursor) ] )
+            ( model, [ SetMode Insert, MoveCursor LineEnd ] )
+
+        "p" :: _ ->
+            ( model, [ PasteAfter, MoveCursor Down, MoveCursor FirstNonBlankChar ] )
+
+        "P" :: _ ->
+            ( model, [ PasteBefore ] )
 
         "o" :: _ ->
             ( model
-            , [ InsertNewLine (cursorLine + 1), SetMode Insert, SetCursor ((cursorMoveDown >> cursorMoveLineBegin) cursor) ]
+            , [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]
             )
 
         "O" :: _ ->
             ( model
-            , [ InsertNewLine cursorLine, SetMode Insert, SetCursor (cursorMoveLineBegin cursor) ]
+            , [ InsertNewLine cursorLine, SetMode Insert, MoveCursor LineBegin ]
             )
 
         "0" :: _ ->
             ( model
-            , [ SetCursor (cursorMoveLineBegin cursor) ]
+            , [ MoveCursor LineBegin ]
+            )
+
+        "$" :: _ ->
+            ( model
+            , [ MoveCursor LineEnd ]
             )
 
         "h" :: _ ->
@@ -218,25 +321,26 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
                 ( model, [] )
 
         "j" :: _ ->
-            if cursorLine < List.length (bufferToLines buffer) - 1 then
-                ( model, [ SetCursor (cursorMoveDown cursor) ] )
-
-            else
-                ( model, [] )
+            ( model, [ MoveCursor Down ] )
 
         "k" :: _ ->
-            if cursorLine > 0 then
-                ( model, [ SetCursor (cursorMoveUp cursor) ] )
-
-            else
-                ( model, [] )
+            ( model, [ MoveCursor Up ] )
 
         "l" :: _ ->
-            if cursorChar < (String.length (currentBufferLine cursor buffer) - 1) then
-                ( model, [ SetCursor (cursorMoveRight cursor) ] )
-
-            else
-                ( model, [] )
+            ( model, [ MoveCursor Right ] )
 
         _ ->
             ( model, [] )
+
+
+
+-- helper
+
+
+ifThenElse : Bool -> a -> a -> a
+ifThenElse pred then_ else_ =
+    if pred then
+        then_
+
+    else
+        else_

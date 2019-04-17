@@ -11,6 +11,7 @@ module Buffer exposing
     , cursorMoveRight
     , cursorMoveToEndOfLine
     , cursorMoveUp
+    , lastCharIndexInLine
     , splitBufferContent
     , splitLine
     )
@@ -32,6 +33,11 @@ currentBufferLine cursor buffer =
         -- Note: Not sure if this is a good idea.
         -- Shouldn't be possible and maybe handling is overhead, but defaulting can lead to errors.
         |> Maybe.withDefault ""
+
+
+lastCharIndexInLine : Cursor -> Buffer -> Int
+lastCharIndexInLine cursor buffer =
+    String.length (currentBufferLine cursor buffer) - 1
 
 
 splitBufferContent :
@@ -85,6 +91,10 @@ splitLine cursorChar content =
             String.slice (charAt + 1) (String.length content) content
     in
     ( before, middle, after )
+
+
+
+--TODO: Maybe refactor to storing a maximum cursor width in the model
 
 
 cursorInNormalModeLine : Int -> Cursor -> Cursor

@@ -35,8 +35,7 @@ main =
 init : ( Model, Cmd Msg )
 init =
     ( initModel
-    , Browser.Dom.focus "outermost"
-        |> Task.attempt (always NoOp)
+    , Browser.Dom.focus "outermost" |> Task.attempt (always NoOp)
     )
 
 
@@ -159,6 +158,22 @@ update msg model =
                         cursorMoveLineBegin
             in
             ( { model | buffer = Buffer buffer, cursor = moveCursor model.cursor }, Cmd.none )
+
+        DeleteChar line char ->
+            let
+                { linesBefore, before, after, linesAfter } =
+                    splitBufferContent (Cursor line char) model.buffer
+
+                newLine =
+                    before ++ after
+
+                buffer =
+                    linesBefore ++ newLine :: linesAfter |> String.join "\n"
+
+                cursor =
+                    cursorInNormalModeLine newLine model.cursor
+            in
+            ( { model | buffer = Buffer buffer, cursor = cursor }, Cmd.none )
 
         MoveCursor direction ->
             let
@@ -325,6 +340,9 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
                 "O" :: _ ->
                     [ InsertNewLine cursorLine, SetMode Insert, MoveCursor LineBegin ]
 
+                "x" :: _ ->
+                    [ DeleteChar cursorLine cursorChar ]
+
                 "0" :: _ ->
                     [ MoveCursor LineBegin ]
 
@@ -370,6 +388,7 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
 
 ignoredKeysInInsertMode : List String
 ignoredKeysInInsertMode =
+    -- TODO: Extend list with media keys
     [ "Alt"
     , "AltGraph"
     , "ArrowDown"

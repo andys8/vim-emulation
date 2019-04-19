@@ -147,22 +147,22 @@ splitLine cursorChar content =
 --TODO: Maybe refactor to storing a maximum cursor width in the model
 
 
-cursorInNormalModeLine : Int -> Cursor -> Cursor
-cursorInNormalModeLine currentLineLength ((Cursor cursorLine cursorChar) as cursor) =
-    if cursorChar >= currentLineLength then
-        Cursor cursorLine (currentLineLength - 1)
+cursorInNormalModeBuffer : Buffer -> Cursor -> Cursor
+cursorInNormalModeBuffer buffer cursor =
+    cursorInNormalModeLine (currentBufferLine cursor buffer) cursor
+
+
+cursorInNormalModeLine : String -> Cursor -> Cursor
+cursorInNormalModeLine lineContent ((Cursor line char) as cursor) =
+    let
+        lineLength =
+            String.length lineContent
+    in
+    if char >= lineLength && char > 0 then
+        Cursor line (lineLength - 1)
 
     else
         cursor
-
-
-cursorInNormalModeBuffer : Buffer -> Cursor -> Cursor
-cursorInNormalModeBuffer buffer cursor =
-    let
-        currentLineLength =
-            String.length (currentBufferLine cursor buffer)
-    in
-    cursorInNormalModeLine currentLineLength cursor
 
 
 cursorMoveToEndOfLine : Buffer -> Cursor -> Cursor

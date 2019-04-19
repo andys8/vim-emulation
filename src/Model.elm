@@ -42,6 +42,7 @@ type Msg
     | InsertNewLine Int
     | YankLine Int
     | DeleteLine Int
+    | DeleteChar Int Int
     | PasteBefore
     | PasteAfter
     | MoveCursor CursorDirection

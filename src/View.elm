@@ -78,7 +78,7 @@ viewBufferLine mode cursor lineNumber lineContent =
             let
                 (Cursor _ normalizedCursorChar) =
                     if mode == Normal then
-                        cursorInNormalModeLine (String.length lineContent) cursor
+                        cursorInNormalModeLine lineContent cursor
 
                     else
                         cursor

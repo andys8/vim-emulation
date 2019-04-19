@@ -5,6 +5,7 @@ module Buffer exposing
     , currentBufferLine
     , cursorChar_
     , cursorFromWORD
+    , cursorFromWord
     , cursorInNormalModeBuffer
     , cursorInNormalModeLine
     , cursorLine_
@@ -16,8 +17,11 @@ module Buffer exposing
     , cursorMoveUp
     , isWORDafterCursor
     , isWORDbeforeCursor
+    , isWordAfterCursor
+    , isWordBeforeCursor
     , lastCharIndexInLine
     , lineToWORDs
+    , lineToWords
     , splitBufferContent
     , splitLine
     )
@@ -75,7 +79,8 @@ lineToWords : Int -> String -> List Word
 lineToWords lineNumber line =
     let
         regex =
-            Regex.fromString "\\S+" |> Maybe.withDefault Regex.never
+            Regex.fromString "\\w+|[^\\w^\\s]+"
+                |> Maybe.withDefault Regex.never
     in
     Regex.find regex line
         |> List.map (\{ index, match } -> Word (Position lineNumber index) match)
@@ -171,6 +176,16 @@ isWORDbeforeCursor (Cursor cursorLine cursorChar) (WORD (Position wordLine wordC
     wordLine < cursorLine || (cursorLine == wordLine && wordChar < cursorChar)
 
 
+isWordAfterCursor : Cursor -> Word -> Bool
+isWordAfterCursor (Cursor cursorLine cursorChar) (Word (Position wordLine wordChar) _) =
+    wordLine > cursorLine || (cursorLine == wordLine && wordChar > cursorChar)
+
+
+isWordBeforeCursor : Cursor -> Word -> Bool
+isWordBeforeCursor (Cursor cursorLine cursorChar) (Word (Position wordLine wordChar) _) =
+    wordLine < cursorLine || (cursorLine == wordLine && wordChar < cursorChar)
+
+
 cursorMoveRight : Cursor -> Cursor
 cursorMoveRight (Cursor line char) =
     Cursor line (char + 1)
@@ -198,6 +213,11 @@ cursorMoveLineBegin (Cursor line _) =
 
 cursorFromWORD : WORD -> Cursor
 cursorFromWORD (WORD positon _) =
+    cursorFromPosition positon
+
+
+cursorFromWord : Word -> Cursor
+cursorFromWord (Word positon _) =
     cursorFromPosition positon
 
 

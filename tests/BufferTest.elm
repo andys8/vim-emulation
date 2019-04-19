@@ -36,8 +36,8 @@ all =
                             ]
             , test "parens are part of WORD" <|
                 \_ ->
-                    lineToWORDs 0 "(a)"
-                        |> Expect.equal [ WORD (Position 0 0) "(a)" ]
+                    lineToWORDs 0 "(a)a"
+                        |> Expect.equal [ WORD (Position 0 0) "(a)a" ]
             , test "parens with spaces are separate WORDs" <|
                 \_ ->
                     lineToWORDs 0 "( a )"
@@ -45,6 +45,49 @@ all =
                             [ WORD (Position 0 0) "("
                             , WORD (Position 0 2) "a"
                             , WORD (Position 0 4) ")"
+                            ]
+            ]
+        , describe "lineToWords"
+            [ test "parens are independant words" <|
+                \_ ->
+                    lineToWords 0 "(a)a"
+                        |> Expect.equal
+                            [ Word (Position 0 0) "("
+                            , Word (Position 0 1) "a"
+                            , Word (Position 0 2) ")"
+                            , Word (Position 0 3) "a"
+                            ]
+            , test "words are indepent even if there are no separating spaces" <|
+                \_ ->
+                    lineToWords 0 "(abc)"
+                        |> Expect.equal
+                            [ Word (Position 0 0) "("
+                            , Word (Position 0 1) "abc"
+                            , Word (Position 0 4) ")"
+                            ]
+            , test "parens with spaces" <|
+                \_ ->
+                    lineToWords 0 "( a )"
+                        |> Expect.equal
+                            [ Word (Position 0 0) "("
+                            , Word (Position 0 2) "a"
+                            , Word (Position 0 4) ")"
+                            ]
+            , test "different parens and special characters" <|
+                \_ ->
+                    lineToWords 0 "( abc ) (abc) {} <> . _-"
+                        |> Expect.equal
+                            [ Word (Position 0 0) "("
+                            , Word (Position 0 2) "abc"
+                            , Word (Position 0 6) ")"
+                            , Word (Position 0 8) "("
+                            , Word (Position 0 9) "abc"
+                            , Word (Position 0 12) ")"
+                            , Word (Position 0 14) "{}"
+                            , Word (Position 0 17) "<>"
+                            , Word (Position 0 20) "."
+                            , Word (Position 0 22) "_"
+                            , Word (Position 0 23) "-"
                             ]
             ]
         , describe "bufferToWORDs"
@@ -66,15 +109,13 @@ all =
                     buffer =
                         Buffer str
 
-                    contentWORD (WORD p s) =
-                        ( p, s )
+                    resWORDs =
+                        bufferToWORDs buffer |> List.map (\(WORD _ s) -> s)
 
-                    contentWord (Word p s) =
-                        ( p, s )
+                    resWords =
+                        bufferToWords buffer |> List.map (\(Word _ s) -> s)
                 in
-                Expect.equal
-                    (bufferToWords buffer |> List.map contentWord)
-                    (bufferToWORDs buffer |> List.map contentWORD)
+                Expect.equal resWORDs resWords
         ]
 
 

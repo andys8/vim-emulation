@@ -2,6 +2,8 @@ module BufferTest exposing (all)
 
 import Buffer exposing (..)
 import Expect
+import Fuzz exposing (Fuzzer)
+import List
 import Model exposing (..)
 import Test exposing (..)
 
@@ -58,4 +60,28 @@ all =
                             , WORD (Position 1 0) "l2"
                             ]
             ]
+        , fuzz simpleStringFuzzer "bufferToWords and bufferToWORDS are the same for simple cases" <|
+            \str ->
+                let
+                    buffer =
+                        Buffer str
+
+                    contentWORD (WORD p s) =
+                        ( p, s )
+
+                    contentWord (Word p s) =
+                        ( p, s )
+                in
+                Expect.equal
+                    (bufferToWords buffer |> List.map contentWord)
+                    (bufferToWORDs buffer |> List.map contentWORD)
         ]
+
+
+simpleStringFuzzer : Fuzzer String
+simpleStringFuzzer =
+    [ "a", "b", " ", "\n" ]
+        |> List.map Fuzz.constant
+        |> Fuzz.oneOf
+        |> Fuzz.list
+        |> Fuzz.map (String.join "")

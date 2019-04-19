@@ -1,6 +1,7 @@
 module Buffer exposing
     ( bufferToLines
     , bufferToWORDs
+    , bufferToWords
     , currentBufferLine
     , cursorChar_
     , cursorFromWORD
@@ -55,17 +56,29 @@ bufferToWORDs =
     bufferToLines >> List.indexedMap lineToWORDs >> List.concat
 
 
+bufferToWords : Buffer -> List Word
+bufferToWords =
+    bufferToLines >> List.indexedMap lineToWords >> List.concat
+
+
 lineToWORDs : Int -> String -> List WORD
 lineToWORDs lineNumber line =
     let
         regex =
             Regex.fromString "\\S+" |> Maybe.withDefault Regex.never
-
-        res =
-            Regex.find regex line
-                |> List.map (\{ index, match } -> WORD (Position lineNumber index) match)
     in
-    res
+    Regex.find regex line
+        |> List.map (\{ index, match } -> WORD (Position lineNumber index) match)
+
+
+lineToWords : Int -> String -> List Word
+lineToWords lineNumber line =
+    let
+        regex =
+            Regex.fromString "\\S+" |> Maybe.withDefault Regex.never
+    in
+    Regex.find regex line
+        |> List.map (\{ index, match } -> Word (Position lineNumber index) match)
 
 
 lastCharIndexInLine : Cursor -> Buffer -> Int

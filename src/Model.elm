@@ -7,6 +7,7 @@ module Model exposing
     , Msg(..)
     , Position(..)
     , WORD(..)
+    , Word(..)
     , initModel
     )
 
@@ -77,3 +78,7 @@ type Position
 
 type WORD
     = WORD Position String
+
+
+type Word
+    = Word Position String

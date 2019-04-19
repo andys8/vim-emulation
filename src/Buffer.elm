@@ -1,5 +1,6 @@
 module Buffer exposing
     ( bufferToLines
+    , bufferToWORDs
     , currentBufferLine
     , cursorChar_
     , cursorInNormalModeBuffer
@@ -12,12 +13,14 @@ module Buffer exposing
     , cursorMoveToEndOfLine
     , cursorMoveUp
     , lastCharIndexInLine
+    , lineToWORDs
     , splitBufferContent
     , splitLine
     )
 
 import List.Extra
 import Model exposing (..)
+import Regex
 
 
 bufferToLines : Buffer -> List String
@@ -33,6 +36,24 @@ currentBufferLine cursor buffer =
         -- Note: Not sure if this is a good idea.
         -- Shouldn't be possible and maybe handling is overhead, but defaulting can lead to errors.
         |> Maybe.withDefault ""
+
+
+bufferToWORDs : Buffer -> List WORD
+bufferToWORDs =
+    bufferToLines >> List.indexedMap lineToWORDs >> List.concat
+
+
+lineToWORDs : Int -> String -> List WORD
+lineToWORDs lineNumber line =
+    let
+        regex =
+            Regex.fromString "\\w+" |> Maybe.withDefault Regex.never
+
+        res =
+            Regex.find regex line
+                |> List.map (\{ index, match } -> WORD (Position lineNumber index) match)
+    in
+    res
 
 
 lastCharIndexInLine : Cursor -> Buffer -> Int

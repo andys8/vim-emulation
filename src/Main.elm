@@ -4,7 +4,18 @@ import Browser
 import Browser.Dom
 import Buffer exposing (..)
 import List.Extra
-import Model exposing (Buffer(..), Cursor(..), CursorDirection(..), Mode(..), Model, Msg(..), initModel)
+import Model
+    exposing
+        ( Buffer(..)
+        , Cursor(..)
+        , CursorDirection(..)
+        , Mode(..)
+        , Model
+        , Msg(..)
+        , Position(..)
+        , WORD(..)
+        , initModel
+        )
 import Platform.Sub as Sub
 import Task
 import Update.Extra exposing (sequence)
@@ -193,9 +204,13 @@ update msg model =
                             in
                             Cursor line (ifThenElse (model.mode == Insert) (lastChar + 1) lastChar)
 
-                        FirstNonBlankChar ->
-                            -- TODO: Find first non blank
-                            Cursor line 0
+                        FirstWORD ->
+                            model.buffer
+                                |> currentBufferLine model.cursor
+                                |> lineToWORDs line
+                                |> List.Extra.getAt 0
+                                |> Maybe.map (\(WORD (Position l c) _) -> Cursor l c)
+                                |> Maybe.withDefault model.cursor
             in
             ( { model | cursor = cursor }, Cmd.none )
 
@@ -273,10 +288,10 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
                     [ SetMode Insert, MoveCursor LineEnd ]
 
                 "p" :: _ ->
-                    [ PasteAfter, MoveCursor Down, MoveCursor FirstNonBlankChar ]
+                    [ PasteAfter, MoveCursor Down, MoveCursor FirstWORD ]
 
                 "P" :: _ ->
-                    [ PasteBefore, MoveCursor FirstNonBlankChar ]
+                    [ PasteBefore, MoveCursor FirstWORD ]
 
                 "o" :: _ ->
                     [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]
@@ -286,6 +301,9 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
 
                 "0" :: _ ->
                     [ MoveCursor LineBegin ]
+
+                "^" :: _ ->
+                    [ MoveCursor FirstWORD ]
 
                 "$" :: _ ->
                     [ MoveCursor LineEnd ]

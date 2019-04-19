@@ -10,6 +10,7 @@
     "start": "elm-app start",
     "build": "elm-app build",
     "test": "elm-app test",
+    "test:watch": "elm-app test --watch",
     "deploy": "rm -rf build && npm run build && gh-pages -d build"
   },
   "repository": {

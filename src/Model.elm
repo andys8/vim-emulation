@@ -1,4 +1,14 @@
-module Model exposing (Buffer(..), Cursor(..), CursorDirection(..), Mode(..), Model, Msg(..), initModel)
+module Model exposing
+    ( Buffer(..)
+    , Cursor(..)
+    , CursorDirection(..)
+    , Mode(..)
+    , Model
+    , Msg(..)
+    , Position(..)
+    , WORD(..)
+    , initModel
+    )
 
 
 type alias Model =
@@ -43,7 +53,7 @@ type CursorDirection
     | Left
     | LineBegin
     | LineEnd
-    | FirstNonBlankChar
+    | FirstWORD
 
 
 type Buffer
@@ -57,3 +67,11 @@ type Mode
 
 type Cursor
     = Cursor Int Int
+
+
+type Position
+    = Position Int Int
+
+
+type WORD
+    = WORD Position String

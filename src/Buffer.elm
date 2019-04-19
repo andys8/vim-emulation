@@ -71,8 +71,12 @@ lineToWORDs lineNumber line =
         regex =
             Regex.fromString "\\S+" |> Maybe.withDefault Regex.never
     in
-    Regex.find regex line
-        |> List.map (\{ index, match } -> WORD (Position lineNumber index) match)
+    if line == "" then
+        [ WORD (Position lineNumber 0) "" ]
+
+    else
+        Regex.find regex line
+            |> List.map (\{ index, match } -> WORD (Position lineNumber index) match)
 
 
 lineToWords : Int -> String -> List Word
@@ -82,8 +86,12 @@ lineToWords lineNumber line =
             Regex.fromString "\\w+|[^\\w^\\s]+"
                 |> Maybe.withDefault Regex.never
     in
-    Regex.find regex line
-        |> List.map (\{ index, match } -> Word (Position lineNumber index) match)
+    if line == "" then
+        [ Word (Position lineNumber 0) "" ]
+
+    else
+        Regex.find regex line
+            |> List.map (\{ index, match } -> Word (Position lineNumber index) match)
 
 
 lastCharIndexInLine : Cursor -> Buffer -> Int

@@ -15,7 +15,7 @@ all =
             [ test "empty" <|
                 \_ ->
                     lineToWORDs 0 ""
-                        |> Expect.equal []
+                        |> Expect.equal [ WORD (Position 0 0) "" ]
             , test "one word" <|
                 \_ ->
                     lineToWORDs 0 "a"
@@ -90,11 +90,31 @@ all =
                             , Word (Position 0 23) "-"
                             ]
             ]
+        , describe "bufferToWords"
+            [ test "empty" <|
+                \_ ->
+                    bufferToWords (Buffer "")
+                        |> Expect.equal [ Word (Position 0 0) "" ]
+            , test "multiple lines" <|
+                \_ ->
+                    bufferToWords (Buffer "l1\nl2")
+                        |> Expect.equal
+                            [ Word (Position 0 0) "l1"
+                            , Word (Position 1 0) "l2"
+                            ]
+            , test "empty lines are considered words" <|
+                \_ ->
+                    bufferToWords (Buffer "\n")
+                        |> Expect.equal
+                            [ Word (Position 0 0) ""
+                            , Word (Position 1 0) ""
+                            ]
+            ]
         , describe "bufferToWORDs"
             [ test "empty" <|
                 \_ ->
                     bufferToWORDs (Buffer "")
-                        |> Expect.equal []
+                        |> Expect.equal [ WORD (Position 0 0) "" ]
             , test "multiple lines" <|
                 \_ ->
                     bufferToWORDs (Buffer "l1\nl2")

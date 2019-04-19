@@ -266,7 +266,7 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
 
     else
         let
-            (Cursor cursorLine cursorChar) =
+            (Cursor _ cursorChar) =
                 cursor
 
             { linesBefore, before, middle, after, linesAfter } =
@@ -303,7 +303,7 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
 
 
 handleNormalMode : String -> Model -> ( Model, List Msg )
-handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
+handleNormalMode _ ({ cursor, keyStrokes } as model) =
     let
         (Cursor cursorLine cursorChar) =
             cursor
@@ -340,8 +340,17 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
                 "O" :: _ ->
                     [ InsertNewLine cursorLine, SetMode Insert, MoveCursor LineBegin ]
 
+                "Delete" :: _ ->
+                    [ DeleteChar cursorLine cursorChar ]
+
                 "x" :: _ ->
                     [ DeleteChar cursorLine cursorChar ]
+
+                "X" :: _ ->
+                    ifThenElse
+                        (cursorChar > 0)
+                        [ DeleteChar cursorLine (cursorChar - 1), MoveCursor Left ]
+                        []
 
                 "0" :: _ ->
                     [ MoveCursor LineBegin ]

@@ -3,6 +3,7 @@ module Buffer exposing
     , bufferToWORDs
     , currentBufferLine
     , cursorChar_
+    , cursorFromWORD
     , cursorInNormalModeBuffer
     , cursorInNormalModeLine
     , cursorLine_
@@ -21,6 +22,15 @@ module Buffer exposing
 import List.Extra
 import Model exposing (..)
 import Regex
+
+
+type alias SplitResult =
+    { linesBefore : List String
+    , before : String
+    , middle : String
+    , after : String
+    , linesAfter : List String
+    }
 
 
 bufferToLines : Buffer -> List String
@@ -61,16 +71,7 @@ lastCharIndexInLine cursor buffer =
     String.length (currentBufferLine cursor buffer) - 1
 
 
-splitBufferContent :
-    Cursor
-    -> Buffer
-    ->
-        { linesBefore : List String
-        , before : String
-        , middle : String
-        , after : String
-        , linesAfter : List String
-        }
+splitBufferContent : Cursor -> Buffer -> SplitResult
 splitBufferContent ((Cursor cursorLine cursorChar) as cursor) buffer =
     let
         lines =
@@ -168,6 +169,16 @@ cursorMoveDown (Cursor line char) =
 cursorMoveLineBegin : Cursor -> Cursor
 cursorMoveLineBegin (Cursor line _) =
     Cursor line 0
+
+
+cursorFromWORD : WORD -> Cursor
+cursorFromWORD (WORD positon _) =
+    cursorFromPosition positon
+
+
+cursorFromPosition : Position -> Cursor
+cursorFromPosition (Position line char) =
+    Cursor line char
 
 
 cursorChar_ : Cursor -> Int

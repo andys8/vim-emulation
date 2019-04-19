@@ -53,7 +53,8 @@ type CursorDirection
     | Left
     | LineBegin
     | LineEnd
-    | FirstWORD
+    | FirstWORDinLine
+    | NextWORD
 
 
 type Buffer

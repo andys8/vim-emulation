@@ -204,13 +204,19 @@ update msg model =
                             in
                             Cursor line (ifThenElse (model.mode == Insert) (lastChar + 1) lastChar)
 
-                        FirstWORD ->
+                        FirstWORDinLine ->
                             model.buffer
                                 |> currentBufferLine model.cursor
                                 |> lineToWORDs line
                                 |> List.Extra.getAt 0
-                                |> Maybe.map (\(WORD (Position l c) _) -> Cursor l c)
+                                |> Maybe.map cursorFromWORD
                                 |> Maybe.withDefault model.cursor
+
+                        NextWORD ->
+                            bufferToWORDs model.buffer
+                                |> List.Extra.find (\(WORD (Position l c) _) -> line == l && c > char || l > line)
+                                |> Maybe.map cursorFromWORD
+                                |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
             in
             ( { model | cursor = cursor }, Cmd.none )
 
@@ -288,10 +294,10 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
                     [ SetMode Insert, MoveCursor LineEnd ]
 
                 "p" :: _ ->
-                    [ PasteAfter, MoveCursor Down, MoveCursor FirstWORD ]
+                    [ PasteAfter, MoveCursor Down, MoveCursor FirstWORDinLine ]
 
                 "P" :: _ ->
-                    [ PasteBefore, MoveCursor FirstWORD ]
+                    [ PasteBefore, MoveCursor FirstWORDinLine ]
 
                 "o" :: _ ->
                     [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]
@@ -303,7 +309,10 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
                     [ MoveCursor LineBegin ]
 
                 "^" :: _ ->
-                    [ MoveCursor FirstWORD ]
+                    [ MoveCursor FirstWORDinLine ]
+
+                "W" :: _ ->
+                    [ MoveCursor NextWORD ]
 
                 "$" :: _ ->
                     [ MoveCursor LineEnd ]

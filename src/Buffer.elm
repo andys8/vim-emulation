@@ -59,7 +59,7 @@ lineToWORDs : Int -> String -> List WORD
 lineToWORDs lineNumber line =
     let
         regex =
-            Regex.fromString "\\w+" |> Maybe.withDefault Regex.never
+            Regex.fromString "\\S+" |> Maybe.withDefault Regex.never
 
         res =
             Regex.find regex line

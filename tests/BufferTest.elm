@@ -32,6 +32,18 @@ all =
                             [ WORD (Position 0 2) "abc"
                             , WORD (Position 0 9) "def"
                             ]
+            , test "parens are part of WORD" <|
+                \_ ->
+                    lineToWORDs 0 "(a)"
+                        |> Expect.equal [ WORD (Position 0 0) "(a)" ]
+            , test "parens with spaces are separate WORDs" <|
+                \_ ->
+                    lineToWORDs 0 "( a )"
+                        |> Expect.equal
+                            [ WORD (Position 0 0) "("
+                            , WORD (Position 0 2) "a"
+                            , WORD (Position 0 4) ")"
+                            ]
             ]
         , describe "bufferToWORDs"
             [ test "empty" <|

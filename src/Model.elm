@@ -55,6 +55,7 @@ type CursorDirection
     | LineEnd
     | FirstWORDinLine
     | NextWORD
+    | PrevWORD
 
 
 type Buffer

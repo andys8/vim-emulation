@@ -13,6 +13,8 @@ module Buffer exposing
     , cursorMoveRight
     , cursorMoveToEndOfLine
     , cursorMoveUp
+    , isWORDafterCursor
+    , isWORDbeforeCursor
     , lastCharIndexInLine
     , lineToWORDs
     , splitBufferContent
@@ -144,6 +146,16 @@ cursorMoveToEndOfLine buffer cursor =
             String.length <| currentBufferLine cursor buffer
     in
     Cursor (cursorLine_ cursor) cursorChar
+
+
+isWORDafterCursor : Cursor -> WORD -> Bool
+isWORDafterCursor (Cursor cursorLine cursorChar) (WORD (Position wordLine wordChar) _) =
+    wordLine > cursorLine || (cursorLine == wordLine && wordChar > cursorChar)
+
+
+isWORDbeforeCursor : Cursor -> WORD -> Bool
+isWORDbeforeCursor (Cursor cursorLine cursorChar) (WORD (Position wordLine wordChar) _) =
+    wordLine < cursorLine || (cursorLine == wordLine && wordChar < cursorChar)
 
 
 cursorMoveRight : Cursor -> Cursor

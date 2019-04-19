@@ -214,9 +214,16 @@ update msg model =
 
                         NextWORD ->
                             bufferToWORDs model.buffer
-                                |> List.Extra.find (\(WORD (Position l c) _) -> line == l && c > char || l > line)
+                                |> List.Extra.find (isWORDafterCursor model.cursor)
                                 |> Maybe.map cursorFromWORD
                                 |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
+
+                        PrevWORD ->
+                            bufferToWORDs model.buffer
+                                |> List.filter (isWORDbeforeCursor model.cursor)
+                                |> List.Extra.last
+                                |> Maybe.map cursorFromWORD
+                                |> Maybe.withDefault (Cursor 0 0)
             in
             ( { model | cursor = cursor }, Cmd.none )
 
@@ -313,6 +320,9 @@ handleNormalMode _ ({ cursor, buffer, keyStrokes } as model) =
 
                 "W" :: _ ->
                     [ MoveCursor NextWORD ]
+
+                "B" :: _ ->
+                    [ MoveCursor PrevWORD ]
 
                 "$" :: _ ->
                     [ MoveCursor LineEnd ]

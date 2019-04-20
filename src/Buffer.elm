@@ -5,6 +5,7 @@ module Buffer exposing
     , currentBufferLine
     , cursorChar_
     , cursorFromWORD
+    , cursorFromWORDEnd
     , cursorFromWord
     , cursorFromWordEnd
     , cursorInNormalModeBuffer
@@ -16,6 +17,7 @@ module Buffer exposing
     , cursorMoveRight
     , cursorMoveToEndOfLine
     , cursorMoveUp
+    , isWORDEndAfterCursor
     , isWORDafterCursor
     , isWORDbeforeCursor
     , isWordAfterCursor
@@ -26,6 +28,7 @@ module Buffer exposing
     , lineToWords
     , splitBufferContent
     , splitLine
+    , wORDsToWORDEnds
     , wordsToWordEnds
     )
 
@@ -68,18 +71,14 @@ bufferToWords =
     bufferToLines >> List.indexedMap lineToWords >> List.concat
 
 
-wordsToWordEnds : List Word -> List WordEnd
+wordsToWordEnds : List Word -> List Word
 wordsToWordEnds =
-    List.filterMap wordToWordEnd
+    List.filter (\(Word _ content) -> not (String.isEmpty content))
 
 
-wordToWordEnd : Word -> Maybe WordEnd
-wordToWordEnd (Word (Position line char) content) =
-    if String.isEmpty content then
-        Nothing
-
-    else
-        Just <| WordEnd (Position line (char + String.length content - 1)) content
+wORDsToWORDEnds : List WORD -> List WORD
+wORDsToWORDEnds =
+    List.filter (\(WORD _ content) -> not (String.isEmpty content))
 
 
 lineToWORDs : Int -> String -> List WORD
@@ -211,9 +210,22 @@ isWordBeforeCursor (Cursor cursorLine cursorChar) (Word (Position wordLine wordC
     wordLine < cursorLine || (cursorLine == wordLine && wordChar < cursorChar)
 
 
-isWordEndAfterCursor : Cursor -> WordEnd -> Bool
-isWordEndAfterCursor (Cursor cursorLine cursorChar) (WordEnd (Position wordLine wordChar) wordContent) =
-    wordLine > cursorLine || (cursorLine == wordLine && wordChar > cursorChar)
+isWordEndAfterCursor : Cursor -> Word -> Bool
+isWordEndAfterCursor (Cursor cursorLine cursorChar) wordEnd =
+    let
+        (Cursor wordEndLine wordEndChar) =
+            cursorFromWordEnd wordEnd
+    in
+    wordEndLine > cursorLine || (cursorLine == wordEndLine && wordEndChar > cursorChar)
+
+
+isWORDEndAfterCursor : Cursor -> WORD -> Bool
+isWORDEndAfterCursor (Cursor cursorLine cursorChar) wORDEnd =
+    let
+        (Cursor wORDEndLine wORDEndChar) =
+            cursorFromWORDEnd wORDEnd
+    in
+    wORDEndLine > cursorLine || (cursorLine == wORDEndLine && wORDEndChar > cursorChar)
 
 
 cursorMoveRight : Cursor -> Cursor
@@ -251,9 +263,14 @@ cursorFromWord (Word positon _) =
     cursorFromPosition positon
 
 
-cursorFromWordEnd : WordEnd -> Cursor
-cursorFromWordEnd (WordEnd (Position line char) content) =
-    Cursor line char
+cursorFromWordEnd : Word -> Cursor
+cursorFromWordEnd (Word (Position line char) content) =
+    Cursor line (char + String.length content - 1)
+
+
+cursorFromWORDEnd : WORD -> Cursor
+cursorFromWORDEnd (WORD (Position line char) content) =
+    Cursor line (char + String.length content - 1)
 
 
 cursorFromPosition : Position -> Cursor

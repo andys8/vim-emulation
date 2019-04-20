@@ -233,17 +233,24 @@ update msg model =
                                 |> Maybe.map cursorFromWord
                                 |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
 
+                        NextWordEnd ->
+                            bufferToWords model.buffer
+                                |> wordsToWordEnds
+                                |> List.Extra.find (isWordEndAfterCursor model.cursor)
+                                |> Maybe.map cursorFromWordEnd
+                                |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
+
                         NextWORD ->
                             bufferToWORDs model.buffer
                                 |> List.Extra.find (isWORDafterCursor model.cursor)
                                 |> Maybe.map cursorFromWORD
                                 |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
 
-                        NextWordEnd ->
-                            bufferToWords model.buffer
-                                |> wordsToWordEnds
-                                |> List.Extra.find (isWordEndAfterCursor model.cursor)
-                                |> Maybe.map cursorFromWordEnd
+                        NextWORDEnd ->
+                            bufferToWORDs model.buffer
+                                |> wORDsToWORDEnds
+                                |> List.Extra.find (isWORDEndAfterCursor model.cursor)
+                                |> Maybe.map cursorFromWORDEnd
                                 |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
 
                         PrevWORD ->
@@ -379,6 +386,9 @@ handleNormalMode _ ({ cursor, keyStrokes } as model) =
 
                 "e" :: _ ->
                     [ MoveCursor NextWordEnd ]
+
+                "E" :: _ ->
+                    [ MoveCursor NextWORDEnd ]
 
                 "$" :: _ ->
                     [ MoveCursor LineEnd ]

@@ -8,7 +8,6 @@ module Model exposing
     , Position(..)
     , WORD(..)
     , Word(..)
-    , WordEnd(..)
     , initModel
     )
 
@@ -60,6 +59,7 @@ type CursorDirection
     | NextWord
     | NextWordEnd
     | NextWORD
+    | NextWORDEnd
     | PrevWord
     | PrevWORD
 
@@ -94,9 +94,3 @@ tabs, <EOL>). An empty line is also considered to be a word.
 -}
 type Word
     = Word Position String
-
-
-{-| End of word. Does not stop in an empty line.
--}
-type WordEnd
-    = WordEnd Position String

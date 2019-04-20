@@ -116,8 +116,8 @@ all =
                     bufferToWords (Buffer "l1\n\nl2")
                         |> wordsToWordEnds
                         |> Expect.equal
-                            [ WordEnd (Position 0 1) "l1"
-                            , WordEnd (Position 2 1) "l2"
+                            [ Word (Position 0 0) "l1"
+                            , Word (Position 2 0) "l2"
                             ]
             ]
         , describe "bufferToWORDs"

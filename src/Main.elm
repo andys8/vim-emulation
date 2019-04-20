@@ -239,6 +239,13 @@ update msg model =
                                 |> Maybe.map cursorFromWORD
                                 |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
 
+                        NextWordEnd ->
+                            bufferToWords model.buffer
+                                |> wordsToWordEnds
+                                |> List.Extra.find (isWordEndAfterCursor model.cursor)
+                                |> Maybe.map cursorFromWordEnd
+                                |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
+
                         PrevWORD ->
                             bufferToWORDs model.buffer
                                 |> List.filter (isWORDbeforeCursor model.cursor)
@@ -369,6 +376,9 @@ handleNormalMode _ ({ cursor, keyStrokes } as model) =
 
                 "B" :: _ ->
                     [ MoveCursor PrevWORD ]
+
+                "e" :: _ ->
+                    [ MoveCursor NextWordEnd ]
 
                 "$" :: _ ->
                     [ MoveCursor LineEnd ]

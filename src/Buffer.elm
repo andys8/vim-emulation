@@ -6,6 +6,7 @@ module Buffer exposing
     , cursorChar_
     , cursorFromWORD
     , cursorFromWord
+    , cursorFromWordEnd
     , cursorInNormalModeBuffer
     , cursorInNormalModeLine
     , cursorLine_
@@ -19,11 +20,13 @@ module Buffer exposing
     , isWORDbeforeCursor
     , isWordAfterCursor
     , isWordBeforeCursor
+    , isWordEndAfterCursor
     , lastCharIndexInLine
     , lineToWORDs
     , lineToWords
     , splitBufferContent
     , splitLine
+    , wordsToWordEnds
     )
 
 import List.Extra
@@ -63,6 +66,20 @@ bufferToWORDs =
 bufferToWords : Buffer -> List Word
 bufferToWords =
     bufferToLines >> List.indexedMap lineToWords >> List.concat
+
+
+wordsToWordEnds : List Word -> List WordEnd
+wordsToWordEnds =
+    List.filterMap wordToWordEnd
+
+
+wordToWordEnd : Word -> Maybe WordEnd
+wordToWordEnd (Word (Position line char) content) =
+    if String.isEmpty content then
+        Nothing
+
+    else
+        Just <| WordEnd (Position line (char + String.length content - 1)) content
 
 
 lineToWORDs : Int -> String -> List WORD
@@ -194,6 +211,11 @@ isWordBeforeCursor (Cursor cursorLine cursorChar) (Word (Position wordLine wordC
     wordLine < cursorLine || (cursorLine == wordLine && wordChar < cursorChar)
 
 
+isWordEndAfterCursor : Cursor -> WordEnd -> Bool
+isWordEndAfterCursor (Cursor cursorLine cursorChar) (WordEnd (Position wordLine wordChar) wordContent) =
+    wordLine > cursorLine || (cursorLine == wordLine && wordChar > cursorChar)
+
+
 cursorMoveRight : Cursor -> Cursor
 cursorMoveRight (Cursor line char) =
     Cursor line (char + 1)
@@ -227,6 +249,11 @@ cursorFromWORD (WORD positon _) =
 cursorFromWord : Word -> Cursor
 cursorFromWord (Word positon _) =
     cursorFromPosition positon
+
+
+cursorFromWordEnd : WordEnd -> Cursor
+cursorFromWordEnd (WordEnd (Position line char) content) =
+    Cursor line char
 
 
 cursorFromPosition : Position -> Cursor

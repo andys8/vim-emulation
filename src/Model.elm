@@ -8,6 +8,7 @@ module Model exposing
     , Position(..)
     , WORD(..)
     , Word(..)
+    , WordEnd(..)
     , initModel
     )
 
@@ -57,6 +58,7 @@ type CursorDirection
     | LineEnd
     | FirstWORDinLine
     | NextWord
+    | NextWordEnd
     | NextWORD
     | PrevWord
     | PrevWORD
@@ -79,10 +81,6 @@ type Position
     = Position Int Int
 
 
-
--- TODO: Empty lines as words / WORDs
-
-
 {-| A WORD consists of a sequence of non-blank characters, separated with white
 space. An empty line is also considered to be a WORD.
 -}
@@ -96,3 +94,9 @@ tabs, <EOL>). An empty line is also considered to be a word.
 -}
 type Word
     = Word Position String
+
+
+{-| End of word. Does not stop in an empty line.
+-}
+type WordEnd
+    = WordEnd Position String

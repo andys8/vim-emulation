@@ -15,7 +15,7 @@ import Model exposing (Cursor(..), Mode(..), Model, Msg(..))
 onKeyDown : Html.Attribute Msg
 onKeyDown =
     Decode.field "key" Decode.string
-        |> Decode.map (\m -> ( KeyDown m, True ))
+        |> Decode.map (\key -> ( KeyDown key, True ))
         |> preventDefaultOn "keydown"
 
 
@@ -51,8 +51,10 @@ view model =
 
 viewBufferNames : Element msg
 viewBufferNames =
-    row [ width fill, padding 4, Background.color (rgb255 222 222 222) ]
-        [ text "Buffer" ]
+    row [ width fill, Background.color colors.bufferNamesLineBg ]
+        [ el [ paddingXY 10 4, Background.color colors.bufferNameBg ] (text "[No Name]")
+        , el [ paddingXY 10 4, Font.color colors.white, Background.color colors.bufferNameRightBg, alignRight ] (text "buffers")
+        ]
 
 
 viewBuffer : Model -> Element msg
@@ -135,6 +137,14 @@ modeToString mode =
 
 
 -- Constants
+
+
+colors =
+    { white = rgb255 255 255 255
+    , bufferNamesLineBg = rgb255 48 48 48
+    , bufferNameBg = rgb255 175 135 255
+    , bufferNameRightBg = rgb255 95 95 175
+    }
 
 
 fontSize : Int

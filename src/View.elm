@@ -1,5 +1,6 @@
-module View exposing (view)
+module View exposing (view, viewDocument)
 
+import Browser exposing (Document)
 import Buffer exposing (bufferToLines, cursorInNormalModeLine, cursorLine_, splitLine)
 import Element exposing (..)
 import Element.Background as Background
@@ -16,6 +17,13 @@ onKeyDown =
     Decode.field "key" Decode.string
         |> Decode.map (\m -> ( KeyDown m, True ))
         |> preventDefaultOn "keydown"
+
+
+viewDocument : Model -> Document Msg
+viewDocument model =
+    { title = "Vim"
+    , body = [ view model ]
+    }
 
 
 view : Model -> Html Msg

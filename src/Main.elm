@@ -19,13 +19,13 @@ import Model
 import Platform.Sub as Sub
 import Task
 import Update.Extra exposing (sequence)
-import View exposing (view)
+import View exposing (viewDocument)
 
 
 main : Program () Model Msg
 main =
-    Browser.element
-        { view = view
+    Browser.document
+        { view = viewDocument
         , init = \_ -> init
         , update = update
         , subscriptions = \_ -> Sub.none

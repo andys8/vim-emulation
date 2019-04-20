@@ -219,6 +219,12 @@ update msg model =
                             in
                             Cursor line (ifThenElse (model.mode == Insert) (lastChar + 1) lastChar)
 
+                        FirstLine ->
+                            Cursor 0 char
+
+                        LastLine ->
+                            Cursor ((bufferToLines model.buffer |> List.length) - 1) char
+
                         FirstWORDinLine ->
                             model.buffer
                                 |> currentBufferLine model.cursor
@@ -342,6 +348,9 @@ handleNormalMode _ ({ cursor, keyStrokes } as model) =
                 "y" :: "y" :: _ ->
                     [ YankLine cursorLine, ActionExecuted ]
 
+                "g" :: "g" :: _ ->
+                    [ MoveCursor FirstLine, MoveCursor FirstWORDinLine, ActionExecuted ]
+
                 "i" :: _ ->
                     [ SetMode Insert ]
 
@@ -383,6 +392,9 @@ handleNormalMode _ ({ cursor, keyStrokes } as model) =
 
                 "^" :: _ ->
                     [ MoveCursor FirstWORDinLine ]
+
+                "G" :: _ ->
+                    [ MoveCursor LastLine, MoveCursor FirstWORDinLine ]
 
                 "w" :: _ ->
                     [ MoveCursor NextWord ]

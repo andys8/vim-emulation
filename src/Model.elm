@@ -62,6 +62,8 @@ type CursorDirection
     | NextWORDEnd
     | PrevWord
     | PrevWORD
+    | FirstLine
+    | LastLine
 
 
 type Buffer

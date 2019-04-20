@@ -45,7 +45,7 @@ view model =
             [ viewBufferNames
             , viewBuffer model
             , viewAirline model
-            , viewAllKeyStrokes model.allKeyStrokes
+            , viewCommandLine
             ]
 
 
@@ -67,15 +67,15 @@ viewBuffer { cursor, buffer, mode } =
             lines
                 |> List.indexedMap (\a _ -> a)
                 |> List.map ((+) 1 >> String.fromInt >> text >> el [ width fill ])
-                |> column [ Font.alignRight, paddingXY 8 0, alignTop, Background.color (rgb255 240 240 240) ]
+                |> column [ Font.alignRight, paddingXY 10 0, alignTop, Font.color colors.lineFont ]
 
         bufferLines =
             lines
                 |> List.indexedMap (viewBufferLine mode cursor)
-                |> column [ alignTop ]
+                |> column [ alignTop, Font.color colors.bufferFont ]
     in
     row
-        [ alignTop, height fill, width fill ]
+        [ alignTop, height fill, width fill, Background.color colors.bufferBg ]
         [ lineNumbers
         , bufferLines
         ]
@@ -104,7 +104,7 @@ viewBufferLine mode cursor lineNumber lineContent =
 
 viewCursor : String -> Element msg
 viewCursor charUnderCursor =
-    el [ Background.color (rgb255 100 100 100), Font.color (rgb255 255 255 255) ] <|
+    el [ Background.color colors.bufferFont, Font.color colors.bufferBg ] <|
         if String.isEmpty charUnderCursor then
             text " "
 
@@ -113,16 +113,40 @@ viewCursor charUnderCursor =
 
 
 viewAirline : Model -> Element msg
-viewAirline model =
-    row [ alignBottom, width fill, Background.color (rgb255 222 222 222) ]
-        [ el [ Background.color (rgb255 200 200 200), padding 4, Font.bold ] <| text (modeToString model.mode) ]
+viewAirline { mode, cursor, buffer } =
+    let
+        modeBg =
+            case mode of
+                Insert ->
+                    colors.airLineInsertModeBg
+
+                _ ->
+                    colors.airLineNormalModeBg
+
+        currentLine =
+            cursorLine_ cursor + 1
+
+        totalLines =
+            List.length <| bufferToLines buffer
+
+        linesPercent =
+            String.fromInt (floor ((toFloat currentLine / toFloat totalLines) * 100)) ++ "%"
+
+        lineText =
+            String.fromInt currentLine ++ "/" ++ (String.fromInt <| totalLines)
+    in
+    -- TODO: Percent is not bold
+    row [ alignBottom, width fill, Background.color colors.airLineBg ]
+        [ el [ Background.color modeBg, paddingXY 10 4, Font.bold ] (text (modeToString mode))
+        , el [ Background.color modeBg, paddingXY 10 4, Font.bold, alignRight ] (text <| linesPercent ++ " " ++ lineText)
+        ]
 
 
-viewAllKeyStrokes : List String -> Element msg
-viewAllKeyStrokes keyStrokes =
+viewCommandLine : Element msg
+viewCommandLine =
     row
-        [ alignBottom, Font.color (rgb255 170 170 170), height (minimum fontSize fill) ]
-        [ text <| String.join " " keyStrokes ]
+        [ alignBottom, padding 4, Background.color colors.bufferBg, Font.color colors.bufferFont, height (minimum fontSize fill), width fill ]
+        [ text " " ]
 
 
 modeToString : Mode -> String
@@ -144,6 +168,12 @@ colors =
     , bufferNamesLineBg = rgb255 48 48 48
     , bufferNameBg = rgb255 175 135 255
     , bufferNameRightBg = rgb255 95 95 175
+    , bufferBg = rgb255 38 38 38
+    , bufferFont = rgb255 255 215 175
+    , lineFont = rgb255 118 118 118
+    , airLineBg = rgb255 95 95 95
+    , airLineNormalModeBg = rgb255 175 135 255
+    , airLineInsertModeBg = rgb255 95 255 135
     }
 
 

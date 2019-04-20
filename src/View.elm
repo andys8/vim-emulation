@@ -115,7 +115,7 @@ viewCursor charUnderCursor =
 viewAirline : Model -> Element msg
 viewAirline { mode, cursor, buffer } =
     let
-        modeBg =
+        modeBackgroundColor =
             case mode of
                 Insert ->
                     colors.airLineInsertModeBg
@@ -132,13 +132,19 @@ viewAirline { mode, cursor, buffer } =
         linesPercent =
             String.fromInt (floor ((toFloat currentLine / toFloat totalLines) * 100)) ++ "%"
 
-        lineText =
-            String.fromInt currentLine ++ "/" ++ (String.fromInt <| totalLines)
+        linesCount =
+            String.fromInt currentLine ++ "/" ++ String.fromInt totalLines
     in
-    -- TODO: Percent is not bold
-    row [ alignBottom, width fill, Background.color colors.airLineBg ]
-        [ el [ Background.color modeBg, paddingXY 10 4, Font.bold ] (text (modeToString mode))
-        , el [ Background.color modeBg, paddingXY 10 4, Font.bold, alignRight ] (text <| linesPercent ++ " " ++ lineText)
+    row
+        [ alignBottom, width fill, Background.color colors.airLineBg ]
+        [ el
+            [ Background.color modeBackgroundColor, paddingXY 10 4, Font.bold ]
+            (text (modeToString mode))
+        , row
+            [ Background.color modeBackgroundColor, paddingXY 10 4, alignRight, spacing 10 ]
+            [ el [ alignRight, Font.alignRight, width (shrink |> minimum 80) ] <| text linesPercent
+            , el [ alignRight, Font.alignRight, width (shrink |> minimum 80), Font.bold ] <| text linesCount
+            ]
         ]
 
 

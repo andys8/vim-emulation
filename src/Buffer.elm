@@ -1,13 +1,11 @@
 module Buffer exposing
-    ( bufferToLines
+    ( WordPositionType(..)
+    , bufferToLines
     , bufferToWORDs
     , bufferToWords
     , currentBufferLine
     , cursorChar_
-    , cursorFromWORD
-    , cursorFromWORDEnd
-    , cursorFromWord
-    , cursorFromWordEnd
+    , cursorFromPosition
     , cursorInNormalModeBuffer
     , cursorInNormalModeLine
     , cursorLine_
@@ -17,24 +15,27 @@ module Buffer exposing
     , cursorMoveRight
     , cursorMoveToEndOfLine
     , cursorMoveUp
-    , isWORDEndAfterCursor
-    , isWORDafterCursor
-    , isWORDbeforeCursor
-    , isWordAfterCursor
-    , isWordBeforeCursor
-    , isWordEndAfterCursor
+    , isPositionAfterCursor
+    , isPositionBeforeCursor
     , lastCharIndexInLine
     , lineToWORDs
     , lineToWords
+    , rejectEmptyWORDs
+    , rejectEmptyWords
     , splitBufferContent
     , splitLine
-    , wORDsToWORDEnds
-    , wordsToWordEnds
+    , wORDToPosition
+    , wordToPosition
     )
 
 import List.Extra
 import Model exposing (..)
-import Regex
+import Regex exposing (Regex)
+
+
+type WordPositionType
+    = WordBegin
+    | WordEnd
 
 
 type alias SplitResult =
@@ -71,42 +72,47 @@ bufferToWords =
     bufferToLines >> List.indexedMap lineToWords >> List.concat
 
 
-wordsToWordEnds : List Word -> List Word
-wordsToWordEnds =
+rejectEmptyWords : List Word -> List Word
+rejectEmptyWords =
     List.filter (\(Word _ content) -> not (String.isEmpty content))
 
 
-wORDsToWORDEnds : List WORD -> List WORD
-wORDsToWORDEnds =
+rejectEmptyWORDs : List WORD -> List WORD
+rejectEmptyWORDs =
     List.filter (\(WORD _ content) -> not (String.isEmpty content))
+
+
+wORDRegex : Regex
+wORDRegex =
+    "\\S+"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
+
+
+wordRegex : Regex
+wordRegex =
+    "\\w+|[^\\w^\\s]+"
+        |> Regex.fromString
+        |> Maybe.withDefault Regex.never
 
 
 lineToWORDs : Int -> String -> List WORD
 lineToWORDs lineNumber line =
-    let
-        regex =
-            Regex.fromString "\\S+" |> Maybe.withDefault Regex.never
-    in
     if line == "" then
         [ WORD (Position lineNumber 0) "" ]
 
     else
-        Regex.find regex line
+        Regex.find wORDRegex line
             |> List.map (\{ index, match } -> WORD (Position lineNumber index) match)
 
 
 lineToWords : Int -> String -> List Word
 lineToWords lineNumber line =
-    let
-        regex =
-            Regex.fromString "\\w+|[^\\w^\\s]+"
-                |> Maybe.withDefault Regex.never
-    in
     if line == "" then
         [ Word (Position lineNumber 0) "" ]
 
     else
-        Regex.find regex line
+        Regex.find wordRegex line
             |> List.map (\{ index, match } -> Word (Position lineNumber index) match)
 
 
@@ -159,10 +165,6 @@ splitLine cursorChar content =
     ( before, middle, after )
 
 
-
---TODO: Maybe refactor to storing a maximum cursor width in the model
-
-
 cursorInNormalModeBuffer : Buffer -> Cursor -> Cursor
 cursorInNormalModeBuffer buffer cursor =
     cursorInNormalModeLine (currentBufferLine cursor buffer) cursor
@@ -190,42 +192,34 @@ cursorMoveToEndOfLine buffer cursor =
     Cursor (cursorLine_ cursor) cursorChar
 
 
-isWORDafterCursor : Cursor -> WORD -> Bool
-isWORDafterCursor (Cursor cursorLine cursorChar) (WORD (Position wordLine wordChar) _) =
-    wordLine > cursorLine || (cursorLine == wordLine && wordChar > cursorChar)
+isPositionAfterCursor : Cursor -> Position -> Bool
+isPositionAfterCursor (Cursor cursorLine cursorChar) (Position posLine posChar) =
+    posLine > cursorLine || (cursorLine == posLine && posChar > cursorChar)
 
 
-isWORDbeforeCursor : Cursor -> WORD -> Bool
-isWORDbeforeCursor (Cursor cursorLine cursorChar) (WORD (Position wordLine wordChar) _) =
+isPositionBeforeCursor : Cursor -> Position -> Bool
+isPositionBeforeCursor (Cursor cursorLine cursorChar) (Position wordLine wordChar) =
     wordLine < cursorLine || (cursorLine == wordLine && wordChar < cursorChar)
 
 
-isWordAfterCursor : Cursor -> Word -> Bool
-isWordAfterCursor (Cursor cursorLine cursorChar) (Word (Position wordLine wordChar) _) =
-    wordLine > cursorLine || (cursorLine == wordLine && wordChar > cursorChar)
+wordToPosition : WordPositionType -> Word -> Position
+wordToPosition positionType (Word position content) =
+    positionForType positionType position content
 
 
-isWordBeforeCursor : Cursor -> Word -> Bool
-isWordBeforeCursor (Cursor cursorLine cursorChar) (Word (Position wordLine wordChar) _) =
-    wordLine < cursorLine || (cursorLine == wordLine && wordChar < cursorChar)
+wORDToPosition : WordPositionType -> WORD -> Position
+wORDToPosition positionType (WORD position content) =
+    positionForType positionType position content
 
 
-isWordEndAfterCursor : Cursor -> Word -> Bool
-isWordEndAfterCursor (Cursor cursorLine cursorChar) wordEnd =
-    let
-        (Cursor wordEndLine wordEndChar) =
-            cursorFromWordEnd wordEnd
-    in
-    wordEndLine > cursorLine || (cursorLine == wordEndLine && wordEndChar > cursorChar)
+positionForType : WordPositionType -> Position -> String -> Position
+positionForType positionType (Position line char) content =
+    case positionType of
+        WordBegin ->
+            Position line char
 
-
-isWORDEndAfterCursor : Cursor -> WORD -> Bool
-isWORDEndAfterCursor (Cursor cursorLine cursorChar) wORDEnd =
-    let
-        (Cursor wORDEndLine wORDEndChar) =
-            cursorFromWORDEnd wORDEnd
-    in
-    wORDEndLine > cursorLine || (cursorLine == wORDEndLine && wORDEndChar > cursorChar)
+        WordEnd ->
+            Position line (char + String.length content - 1)
 
 
 cursorMoveRight : Cursor -> Cursor
@@ -251,26 +245,6 @@ cursorMoveDown (Cursor line char) =
 cursorMoveLineBegin : Cursor -> Cursor
 cursorMoveLineBegin (Cursor line _) =
     Cursor line 0
-
-
-cursorFromWORD : WORD -> Cursor
-cursorFromWORD (WORD positon _) =
-    cursorFromPosition positon
-
-
-cursorFromWord : Word -> Cursor
-cursorFromWord (Word positon _) =
-    cursorFromPosition positon
-
-
-cursorFromWordEnd : Word -> Cursor
-cursorFromWordEnd (Word (Position line char) content) =
-    Cursor line (char + String.length content - 1)
-
-
-cursorFromWORDEnd : WORD -> Cursor
-cursorFromWORDEnd (WORD (Position line char) content) =
-    Cursor line (char + String.length content - 1)
 
 
 cursorFromPosition : Position -> Cursor

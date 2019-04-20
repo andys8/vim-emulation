@@ -110,11 +110,11 @@ all =
                             , Word (Position 1 0) ""
                             ]
             ]
-        , describe "wordsToWordEnds"
+        , describe "rejectEmptyWords"
             [ test "empty lines are ignored when using WordEnd" <|
                 \_ ->
                     bufferToWords (Buffer "l1\n\nl2")
-                        |> wordsToWordEnds
+                        |> rejectEmptyWords
                         |> Expect.equal
                             [ Word (Position 0 0) "l1"
                             , Word (Position 2 0) "l2"

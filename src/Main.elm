@@ -224,47 +224,59 @@ update msg model =
                                 |> currentBufferLine model.cursor
                                 |> lineToWORDs line
                                 |> List.Extra.getAt 0
-                                |> Maybe.map cursorFromWORD
+                                |> Maybe.map (wORDToPosition WordBegin >> cursorFromPosition)
                                 |> Maybe.withDefault model.cursor
 
                         NextWord ->
-                            bufferToWords model.buffer
-                                |> List.Extra.find (isWordAfterCursor model.cursor)
-                                |> Maybe.map cursorFromWord
+                            model.buffer
+                                |> bufferToWords
+                                |> List.map (wordToPosition WordBegin)
+                                |> List.Extra.find (isPositionAfterCursor model.cursor)
+                                |> Maybe.map cursorFromPosition
                                 |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
 
                         NextWordEnd ->
-                            bufferToWords model.buffer
-                                |> wordsToWordEnds
-                                |> List.Extra.find (isWordEndAfterCursor model.cursor)
-                                |> Maybe.map cursorFromWordEnd
+                            model.buffer
+                                |> bufferToWords
+                                |> rejectEmptyWords
+                                |> List.map (wordToPosition WordEnd)
+                                |> List.Extra.find (isPositionAfterCursor model.cursor)
+                                |> Maybe.map cursorFromPosition
                                 |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
 
                         NextWORD ->
-                            bufferToWORDs model.buffer
-                                |> List.Extra.find (isWORDafterCursor model.cursor)
-                                |> Maybe.map cursorFromWORD
+                            model.buffer
+                                |> bufferToWORDs
+                                |> List.map (wORDToPosition WordBegin)
+                                |> List.Extra.find (isPositionAfterCursor model.cursor)
+                                |> Maybe.map cursorFromPosition
                                 |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
 
                         NextWORDEnd ->
-                            bufferToWORDs model.buffer
-                                |> wORDsToWORDEnds
-                                |> List.Extra.find (isWORDEndAfterCursor model.cursor)
-                                |> Maybe.map cursorFromWORDEnd
+                            model.buffer
+                                |> bufferToWORDs
+                                |> rejectEmptyWORDs
+                                |> List.map (wORDToPosition WordEnd)
+                                |> List.Extra.find (isPositionAfterCursor model.cursor)
+                                |> Maybe.map cursorFromPosition
                                 |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
 
-                        PrevWORD ->
-                            bufferToWORDs model.buffer
-                                |> List.filter (isWORDbeforeCursor model.cursor)
+                        PrevWord ->
+                            model.buffer
+                                |> bufferToWords
+                                |> List.map (wordToPosition WordBegin)
+                                |> List.filter (isPositionBeforeCursor model.cursor)
                                 |> List.Extra.last
-                                |> Maybe.map cursorFromWORD
+                                |> Maybe.map cursorFromPosition
                                 |> Maybe.withDefault (Cursor 0 0)
 
-                        PrevWord ->
-                            bufferToWords model.buffer
-                                |> List.filter (isWordBeforeCursor model.cursor)
+                        PrevWORD ->
+                            model.buffer
+                                |> bufferToWORDs
+                                |> List.map (wORDToPosition WordBegin)
+                                |> List.filter (isPositionBeforeCursor model.cursor)
                                 |> List.Extra.last
-                                |> Maybe.map cursorFromWord
+                                |> Maybe.map cursorFromPosition
                                 |> Maybe.withDefault (Cursor 0 0)
             in
             ( { model | cursor = cursor }, Cmd.none )

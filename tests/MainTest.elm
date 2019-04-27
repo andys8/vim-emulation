@@ -191,6 +191,21 @@ all =
                     [ "i", "a", "Enter", "b", "Backspace", "Backspace", "Backspace" ]
                         |> initWithKeySequence
                         |> expectBuffer ""
+            , test "Delete in insert mode" <|
+                \_ ->
+                    initModelWithBuffer "ab"
+                        |> keySequence [ "i", "Delete" ]
+                        |> expectBuffer "b"
+            , test "Delete line end in insert mode" <|
+                \_ ->
+                    initModelWithBuffer "\na"
+                        |> keySequence [ "i", "Delete" ]
+                        |> expectBuffer "a"
+            , test "Delete characters over multiple lines in insert mode" <|
+                \_ ->
+                    initModelWithBuffer "ab\ncd"
+                        |> keySequence [ "i", "Delete", "Delete", "Delete", "Delete" ]
+                        |> expectBuffer "d"
             ]
         ]
 

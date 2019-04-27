@@ -345,7 +345,15 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
                         )
 
                     "Delete" ->
-                        ( before ++ after, [] )
+                        let
+                            after_ =
+                                if middle == "" && String.startsWith "\n" after then
+                                    String.dropLeft 1 after
+
+                                else
+                                    after
+                        in
+                        ( before ++ after_, [] )
 
                     "Tab" ->
                         ( before ++ "  " ++ middle ++ after, [ MoveCursor Right, MoveCursor Right ] )

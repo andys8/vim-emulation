@@ -133,17 +133,19 @@ all =
                         |> expectCursorAt "a"
             , test "Cursor will be at end of line when moving along shorter lines" <|
                 \_ ->
-                    initModelWithBuffer "abcde\nfgcd\nhij"
+                    initModelWithBuffer "abcde\nfg\nhij"
                         |> keySequence [ "j", "j", "l", "l", "k", "k" ]
                         |> expectCursorAt "c"
-            , skip <|
-                -- TODO: Rework cursor logic and this test should pass
-                test "Cursor will be at last available char when coming from long line"
-                <|
-                    \_ ->
-                        initModelWithBuffer "abcde\nfgcd\nhij"
-                            |> keySequence [ "$", "j", "j" ]
-                            |> expectCursorAt "j"
+            , test "Cursor will be at last available char when coming from longer line" <|
+                \_ ->
+                    initModelWithBuffer "abcde\nfg\nhij"
+                        |> keySequence [ "$", "j", "j" ]
+                        |> expectCursorAt "j"
+            , test "Cursor will be at last available char, but h (left) is working" <|
+                \_ ->
+                    initModelWithBuffer "abcde\nfg\nhij"
+                        |> keySequence [ "$", "j", "j", "h" ]
+                        |> expectCursorAt "i"
             ]
         ]
 
@@ -186,7 +188,10 @@ expectCursor cursor =
 expectCursorAt : String -> ( Model, Cmd Msg ) -> Expectation
 expectCursorAt char ( model, _ ) =
     let
+        cursor =
+            cursorInMode model.mode model.buffer model.cursor
+
         { middle } =
-            splitBufferContent model.cursor model.buffer
+            splitBufferContent cursor model.buffer
     in
     Expect.equal char middle

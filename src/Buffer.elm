@@ -6,8 +6,8 @@ module Buffer exposing
     , currentBufferLine
     , cursorChar_
     , cursorFromPosition
-    , cursorInNormalModeBuffer
-    , cursorInNormalModeLine
+    , cursorInMode
+    , cursorInModeLine
     , cursorLine_
     , cursorMoveDown
     , cursorMoveLeft
@@ -121,6 +121,10 @@ lastCharIndexInLine cursor buffer =
     String.length (currentBufferLine cursor buffer) - 1
 
 
+
+-- TODO: Could accept position instead of cursor
+
+
 splitBufferContent : Cursor -> Buffer -> SplitResult
 splitBufferContent ((Cursor cursorLine cursorChar) as cursor) buffer =
     let
@@ -165,18 +169,18 @@ splitLine cursorChar content =
     ( before, middle, after )
 
 
-cursorInNormalModeBuffer : Buffer -> Cursor -> Cursor
-cursorInNormalModeBuffer buffer cursor =
-    cursorInNormalModeLine (currentBufferLine cursor buffer) cursor
+cursorInMode : Mode -> Buffer -> Cursor -> Cursor
+cursorInMode mode buffer cursor =
+    cursorInModeLine mode (currentBufferLine cursor buffer) cursor
 
 
-cursorInNormalModeLine : String -> Cursor -> Cursor
-cursorInNormalModeLine lineContent ((Cursor line char) as cursor) =
+cursorInModeLine : Mode -> String -> Cursor -> Cursor
+cursorInModeLine mode lineContent ((Cursor line char) as cursor) =
     let
         lineLength =
             String.length lineContent
     in
-    if char >= lineLength && char > 0 then
+    if mode == Normal && char >= lineLength && char > 0 then
         Cursor line (lineLength - 1)
 
     else

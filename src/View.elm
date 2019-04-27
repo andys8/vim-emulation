@@ -1,7 +1,7 @@
 module View exposing (view, viewDocument)
 
 import Browser exposing (Document)
-import Buffer exposing (bufferToLines, cursorInNormalModeLine, cursorLine_, splitLine)
+import Buffer exposing (bufferToLines, cursorInModeLine, cursorLine_, splitLine)
 import Element exposing (..)
 import Element.Background as Background
 import Element.Font as Font
@@ -87,11 +87,7 @@ viewBufferLine mode cursor lineNumber lineContent =
         if lineNumber == cursorLine_ cursor then
             let
                 (Cursor _ normalizedCursorChar) =
-                    if mode == Normal then
-                        cursorInNormalModeLine lineContent cursor
-
-                    else
-                        cursor
+                    cursorInModeLine mode lineContent cursor
 
                 ( before, middle, after ) =
                     splitLine normalizedCursorChar lineContent

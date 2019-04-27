@@ -171,7 +171,7 @@ update msg model =
                     linesBefore ++ newLine :: linesAfter |> String.join "\n"
 
                 cursor =
-                    cursorInNormalModeLine newLine model.cursor
+                    cursorInModeLine model.mode newLine model.cursor
             in
             ( { model | buffer = Buffer buffer, cursor = cursor }, Cmd.none )
 
@@ -206,7 +206,7 @@ update msg model =
 
                         Left ->
                             ifThenElse (char > 0)
-                                (cursorMoveLeft (cursorInNormalModeBuffer model.buffer model.cursor))
+                                (cursorMoveLeft (cursorInMode model.mode model.buffer model.cursor))
                                 model.cursor
 
                         LineBegin ->

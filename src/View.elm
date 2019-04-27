@@ -89,7 +89,7 @@ viewBufferLine mode cursor lineNumber lineContent =
                 (Cursor _ normalizedCursorChar) =
                     cursorInModeLine mode lineContent cursor
 
-                ( before, middle, after ) =
+                { before, middle, after } =
                     splitLine normalizedCursorChar lineContent
             in
             [ text before, viewCursor middle, text after ]

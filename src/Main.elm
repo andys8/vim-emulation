@@ -171,19 +171,16 @@ update msg model =
 
         DeleteChar line char ->
             let
-                { linesBefore, before, after, linesAfter } =
+                { before, after } =
                     splitBufferContent (Cursor line char) model.buffer
 
-                newLine =
-                    before ++ after
-
                 buffer =
-                    linesBefore ++ newLine :: linesAfter |> String.join "\n"
+                    Buffer (before ++ after)
 
                 cursor =
-                    cursorInModeLine model.mode newLine model.cursor
+                    cursorInMode model.mode buffer model.cursor
             in
-            ( { model | buffer = Buffer buffer, cursor = cursor }, Cmd.none )
+            ( { model | buffer = buffer, cursor = cursor }, Cmd.none )
 
         MoveCursor direction ->
             let
@@ -308,13 +305,13 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
 
     else
         let
-            (Cursor _ cursorChar) =
+            (Cursor cursorLine cursorChar) =
                 cursor
 
-            { linesBefore, before, middle, after, linesAfter } =
+            { before, middle, after } =
                 splitBufferContent cursor buffer
 
-            ( newCurrentLine, msgs ) =
+            ( buffer_, msgs ) =
                 case keyDown of
                     "Enter" ->
                         ( before ++ "\n" ++ middle ++ after
@@ -322,8 +319,29 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
                         )
 
                     "Backspace" ->
-                        ( String.dropRight 1 before ++ middle ++ after
-                        , [ SetCursor <| ifThenElse (cursorChar > 0) (cursorMoveLeft cursor) cursor ]
+                        let
+                            before_ =
+                                String.dropRight 1 before
+
+                            lastLineLength =
+                                before_
+                                    |> String.lines
+                                    |> List.Extra.last
+                                    |> Maybe.map String.length
+                                    |> Maybe.withDefault 0
+
+                            cursor_ =
+                                if String.endsWith "\n" before then
+                                    Cursor (cursorLine - 1) lastLineLength
+
+                                else if cursorChar > 0 then
+                                    cursorMoveLeft cursor
+
+                                else
+                                    cursor
+                        in
+                        ( before_ ++ middle ++ after
+                        , [ SetCursor cursor_ ]
                         )
 
                     "Delete" ->
@@ -334,12 +352,6 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
 
                     _ ->
                         ( before ++ keyDown ++ middle ++ after, [ MoveCursor Right ] )
-
-            buffer_ =
-                linesBefore
-                    ++ newCurrentLine
-                    :: linesAfter
-                    |> String.join "\n"
         in
         ( { model | buffer = Buffer buffer_ }, msgs )
 

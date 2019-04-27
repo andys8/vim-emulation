@@ -39,11 +39,9 @@ type WordPositionType
 
 
 type alias SplitResult =
-    { linesBefore : List String
-    , before : String
+    { before : String
     , middle : String
     , after : String
-    , linesAfter : List String
     }
 
 
@@ -121,10 +119,6 @@ lastCharIndexInLine cursor buffer =
     String.length (currentBufferLine cursor buffer) - 1
 
 
-
--- TODO: Could accept position instead of cursor
-
-
 splitBufferContent : Cursor -> Buffer -> SplitResult
 splitBufferContent ((Cursor cursorLine cursorChar) as cursor) buffer =
     let
@@ -140,18 +134,16 @@ splitBufferContent ((Cursor cursorLine cursorChar) as cursor) buffer =
         linesAfter =
             List.drop (cursorLine + 1) lines
 
-        ( beforeCurrentLine, middleCurrentLine, afterCurrentLine ) =
+        splittedLine =
             splitLine cursorChar currentLine
     in
-    { linesBefore = linesBefore
-    , before = beforeCurrentLine
-    , middle = middleCurrentLine
-    , after = afterCurrentLine
-    , linesAfter = linesAfter
+    { before = String.join "\n" (linesBefore ++ [ splittedLine.before ])
+    , middle = splittedLine.middle
+    , after = String.join "\n" (splittedLine.after :: linesAfter)
     }
 
 
-splitLine : Int -> String -> ( String, String, String )
+splitLine : Int -> String -> SplitResult
 splitLine cursorChar content =
     let
         charAt =
@@ -166,7 +158,7 @@ splitLine cursorChar content =
         after =
             String.slice (charAt + 1) (String.length content) content
     in
-    ( before, middle, after )
+    { before = before, middle = middle, after = after }
 
 
 cursorInMode : Mode -> Buffer -> Cursor -> Cursor

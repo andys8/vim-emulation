@@ -146,6 +146,51 @@ all =
                     initModelWithBuffer "abcde\nfg\nhij"
                         |> keySequence [ "$", "j", "j", "h" ]
                         |> expectCursorAt "i"
+            , test "Delete with x" <|
+                \_ ->
+                    initModelWithBuffer "abcde"
+                        |> keySequence [ "l", "x", "x" ]
+                        |> Expect.all
+                            [ expectBuffer "ade"
+                            , expectCursorAt "d"
+                            ]
+            , test "S deletes line, goes in insert mode in first char" <|
+                \_ ->
+                    initModelWithBuffer "abcde"
+                        |> keySequence [ "l", "S" ]
+                        |> Expect.all
+                            [ expectBuffer ""
+                            , expectCursor (Cursor 0 0)
+                            , expectMode Insert
+                            ]
+            , test "S with multiple lines" <|
+                \_ ->
+                    initModelWithBuffer "ab\ncd\nef"
+                        |> keySequence [ "j", "S" ]
+                        |> Expect.all
+                            [ expectBuffer "ab\n\nef"
+                            , expectCursor (Cursor 1 0)
+                            , expectMode Insert
+                            ]
+            , test "Multiple lines in insert mode" <|
+                \_ ->
+                    [ "i", "a", "b", "Enter", "c", "Enter", "d", "Escape" ]
+                        |> initWithKeySequence
+                        |> Expect.all
+                            [ expectBuffer "ab\nc\nd"
+                            , expectCursor (Cursor 2 0)
+                            , expectMode Normal
+                            ]
+            , test "2x Backspace over multiple lines in insert mode" <|
+                \_ ->
+                    [ "i", "a", "Enter", "b", "Backspace", "Backspace" ]
+                        |> initWithKeySequence
+                        |> expectBuffer "a"
+            , test "3x Backspace over multiple lines in insert mode" <|
+                \_ ->
+                    [ "i", "a", "Enter", "b", "Backspace", "Backspace", "Backspace" ]
+                        |> initWithKeySequence
+                        |> expectBuffer ""
             ]
         ]
 

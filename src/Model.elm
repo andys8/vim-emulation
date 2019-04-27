@@ -41,6 +41,7 @@ type Msg
     | ActionExecuted
     | InsertNewLine Int
     | YankLine Int
+    | ClearLine Int
     | DeleteLine Int
     | DeleteChar Int Int
     | PasteBefore

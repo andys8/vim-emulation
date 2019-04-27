@@ -139,6 +139,16 @@ update msg model =
             in
             ( { model | buffer = buffer }, Cmd.none )
 
+        ClearLine lineNumber ->
+            let
+                buffer =
+                    model.buffer
+                        |> bufferToLines
+                        |> List.Extra.setAt lineNumber ""
+                        |> String.join "\n"
+            in
+            ( { model | buffer = Buffer buffer, cursor = cursorMoveLineBegin model.cursor }, Cmd.none )
+
         DeleteLine lineNumber ->
             let
                 buffer =
@@ -356,6 +366,9 @@ handleNormalMode _ ({ cursor, keyStrokes } as model) =
 
                 "I" :: _ ->
                     [ SetMode Insert, MoveCursor LineBegin ]
+
+                "S" :: _ ->
+                    [ ClearLine cursorLine, SetMode Insert ]
 
                 "a" :: _ ->
                     [ SetMode Insert, MoveCursor Right ]

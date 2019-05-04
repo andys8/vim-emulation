@@ -13,6 +13,7 @@ import Model
         , Model
         , Msg(..)
         , Position(..)
+        , Register(..)
         , TextObject(..)
         , WORD(..)
         , Word(..)
@@ -109,39 +110,55 @@ update msg model =
                         |> List.Extra.getAt lineNumber
                         |> Maybe.withDefault ""
             in
-            ( { model | register = line }, Cmd.none )
+            ( { model | register = RegisterLine line }, Cmd.none )
 
         PasteBefore ->
-            -- TODO: Implement for lines and words
-            -- Note: This is implemented for single lines only
-            let
-                ( beforeLines, afterLines ) =
-                    List.Extra.splitAt (cursorLine_ model.cursor) (bufferToLines model.buffer)
+            case model.register of
+                RegisterLine register ->
+                    let
+                        ( beforeLines, afterLines ) =
+                            List.Extra.splitAt (cursorLine_ model.cursor) (bufferToLines model.buffer)
 
-                buffer =
-                    beforeLines
-                        ++ model.register
-                        :: afterLines
-                        |> String.join "\n"
-                        |> Buffer
-            in
-            ( { model | buffer = buffer }, Cmd.none )
+                        buffer =
+                            beforeLines ++ register :: afterLines |> String.join "\n"
+                    in
+                    ( { model | buffer = Buffer buffer }, Cmd.none )
+                        |> sequence update [ MoveCursor FirstWORDinLine ]
+
+                RegisterString register ->
+                    let
+                        { before, middle, after } =
+                            splitBufferContent (cursorToPosition model.cursor) model.buffer
+
+                        buffer =
+                            before ++ register ++ middle ++ after
+                    in
+                    ( { model | buffer = Buffer buffer }, Cmd.none )
+                        |> sequence update [ MoveCursor <| Right <| (String.length register - 1) ]
 
         PasteAfter ->
-            -- TODO: Implement for lines and words
-            -- Note: This is implemented for single lines only
-            let
-                ( beforeLines, afterLines ) =
-                    List.Extra.splitAt (cursorLine_ model.cursor + 1) (bufferToLines model.buffer)
+            case model.register of
+                RegisterLine register ->
+                    let
+                        ( beforeLines, afterLines ) =
+                            List.Extra.splitAt (cursorLine_ model.cursor + 1) (bufferToLines model.buffer)
 
-                buffer =
-                    beforeLines
-                        ++ model.register
-                        :: afterLines
-                        |> String.join "\n"
-                        |> Buffer
-            in
-            ( { model | buffer = buffer }, Cmd.none )
+                        buffer =
+                            beforeLines ++ register :: afterLines |> String.join "\n"
+                    in
+                    ( { model | buffer = Buffer buffer }, Cmd.none )
+                        |> sequence update [ MoveCursor Down, MoveCursor FirstWORDinLine ]
+
+                RegisterString register ->
+                    let
+                        { before, middle, after } =
+                            splitBufferContent (cursorToPosition model.cursor) model.buffer
+
+                        buffer =
+                            before ++ middle ++ register ++ after
+                    in
+                    ( { model | buffer = Buffer buffer }, Cmd.none )
+                        |> sequence update [ MoveCursor <| Right <| String.length register ]
 
         ClearLine lineNumber ->
             let
@@ -190,6 +207,7 @@ update msg model =
             case textObject of
                 InWord ->
                     let
+                        -- TODO: Deleting spaces between words in not implemented
                         (Word position wordContent) =
                             model.buffer
                                 |> bufferToWords
@@ -212,7 +230,7 @@ update msg model =
                         cursor =
                             Cursor posLine (max 0 (posChar - 1))
                     in
-                    ( { model | buffer = Buffer buffer, cursor = cursor, register = wordContent }, Cmd.none )
+                    ( { model | buffer = Buffer buffer, cursor = cursor, register = RegisterString wordContent }, Cmd.none )
 
         MoveCursor direction ->
             let
@@ -233,15 +251,24 @@ update msg model =
                                 (Cursor (line + 1) char)
                                 model.cursor
 
-                        Right ->
+                        Right n ->
                             let
-                                lastChar =
+                                adaptToMode =
+                                    case model.mode of
+                                        Insert ->
+                                            (+) 1
+
+                                        _ ->
+                                            identity
+
+                                maxChar =
                                     lastCharIndexInLine model.cursor model.buffer
+                                        |> adaptToMode
                             in
                             ifThenElse
-                                (char < lastChar || (model.mode == Insert && char <= lastChar))
-                                (Cursor line (char + 1))
-                                model.cursor
+                                ((char + n) < maxChar)
+                                (Cursor line (char + n))
+                                (Cursor line maxChar)
 
                         Left ->
                             ifThenElse (char > 0)
@@ -388,10 +415,10 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
                         ( before ++ after_, [] )
 
                     "Tab" ->
-                        ( before ++ "  " ++ middle ++ after, [ MoveCursor Right, MoveCursor Right ] )
+                        ( before ++ "  " ++ middle ++ after, [ MoveCursor (Right 2) ] )
 
                     _ ->
-                        ( before ++ keyDown ++ middle ++ after, [ MoveCursor Right ] )
+                        ( before ++ keyDown ++ middle ++ after, [ MoveCursor (Right 1) ] )
         in
         ( { model | buffer = Buffer buffer_ }, msgs )
 
@@ -430,16 +457,16 @@ handleNormalMode _ ({ cursor, keyStrokes } as model) =
                     [ ClearLine cursorLine, SetMode Insert ]
 
                 "a" :: _ ->
-                    [ SetMode Insert, MoveCursor Right ]
+                    [ SetMode Insert, MoveCursor (Right 1) ]
 
                 "A" :: _ ->
                     [ SetMode Insert, MoveCursor LineEnd ]
 
                 "p" :: _ ->
-                    [ PasteAfter, MoveCursor Down, MoveCursor FirstWORDinLine ]
+                    [ PasteAfter ]
 
                 "P" :: _ ->
-                    [ PasteBefore, MoveCursor FirstWORDinLine ]
+                    [ PasteBefore ]
 
                 "o" :: _ ->
                     [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]
@@ -499,7 +526,7 @@ handleNormalMode _ ({ cursor, keyStrokes } as model) =
                     [ MoveCursor Up ]
 
                 "l" :: _ ->
-                    [ MoveCursor Right ]
+                    [ MoveCursor (Right 1) ]
 
                 _ ->
                     []

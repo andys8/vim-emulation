@@ -6,6 +6,7 @@ module Model exposing
     , Model
     , Msg(..)
     , Position(..)
+    , Register(..)
     , TextObject(..)
     , WORD(..)
     , Word(..)
@@ -19,7 +20,7 @@ type alias Model =
     , mode : Mode
     , cursor : Cursor
     , keyStrokes : List String
-    , register : String
+    , register : Register
     }
 
 
@@ -30,7 +31,7 @@ initModel =
     , mode = Normal
     , cursor = Cursor 0 0
     , keyStrokes = []
-    , register = ""
+    , register = RegisterString ""
     }
 
 
@@ -54,8 +55,9 @@ type Msg
 type CursorDirection
     = Up
     | Down
-    | Right
+    | Right Int
     | Left
+      -- TODO: LeftN
     | LineBegin
     | LineEnd
     | FirstWORDinLine
@@ -103,3 +105,8 @@ type Word
 
 type TextObject
     = InWord
+
+
+type Register
+    = RegisterString String
+    | RegisterLine String

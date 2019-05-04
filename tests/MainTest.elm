@@ -48,11 +48,22 @@ all =
                         initModelWithBuffer "a\nb"
                             |> keySequence [ "d", "d" ]
                             |> expectBuffer "b"
-                , test "Delete and paste a line" <|
+                , test "Delete and paste a line after" <|
                     \_ ->
                         initModelWithBuffer "abc"
                             |> keySequence [ "d", "d", "p" ]
-                            |> expectBuffer "\nabc"
+                            |> Expect.all
+                                [ expectBuffer "\nabc"
+                                , expectCursorAt "a"
+                                ]
+                , test "Delete and paste a line before" <|
+                    \_ ->
+                        initModelWithBuffer "abc"
+                            |> keySequence [ "d", "d", "P" ]
+                            |> Expect.all
+                                [ expectBuffer "abc\n"
+                                , expectCursorAt "a"
+                                ]
                 ]
             , test "Yank line and paste twice" <|
                 \_ ->
@@ -223,19 +234,30 @@ all =
                         initModelWithBuffer "ab cd"
                             |> keySequence [ "w", "d", "i", "w" ]
                             |> expectBuffer "ab "
-                , skip <|
-                    test "delete and paste a single word" <|
-                        \_ ->
-                            initModelWithBuffer "ab"
-                                |> keySequence [ "d", "i", "w", "p", "p" ]
-                                |> expectBuffer "abab"
-                , skip <|
-                    test "delete and paste a word in a line" <|
-                        \_ ->
-                            initModelWithBuffer "ab cd"
-                                |> keySequence [ "d", "i", "w", "p", "p" ]
-                                |> expectBuffer " ababcd"
-                , todo "delete spaces between words"
+                , test "delete and paste a single word" <|
+                    \_ ->
+                        initModelWithBuffer "ab"
+                            |> keySequence [ "d", "i", "w", "p", "p" ]
+                            |> Expect.all
+                                [ expectBuffer "abab"
+                                , expectCursor (Cursor 0 3)
+                                ]
+                , test "delete and paste before with P" <|
+                    \_ ->
+                        initModelWithBuffer "ab"
+                            |> keySequence [ "d", "i", "w", "P", "P" ]
+                            |> Expect.all
+                                [ expectBuffer "aabb"
+                                , expectCursor (Cursor 0 2)
+                                ]
+                , test "delete and paste a word in a line" <|
+                    \_ ->
+                        initModelWithBuffer "ab cd"
+                            |> keySequence [ "d", "i", "w", "p", "p" ]
+                            |> Expect.all
+                                [ expectBuffer " ababcd"
+                                , expectCursor (Cursor 0 4)
+                                ]
                 ]
             ]
         ]

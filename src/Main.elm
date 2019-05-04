@@ -218,19 +218,16 @@ update msg model =
                         { before, middle, after } =
                             splitBufferContent position model.buffer
 
-                        deleteCharsCount =
-                            String.length wordContent
-
                         buffer =
-                            before ++ String.dropLeft deleteCharsCount (middle ++ after)
-
-                        (Position posLine posChar) =
-                            position
-
-                        cursor =
-                            Cursor posLine (max 0 (posChar - 1))
+                            before ++ String.dropLeft (String.length wordContent) (middle ++ after)
                     in
-                    ( { model | buffer = Buffer buffer, cursor = cursor, register = RegisterString wordContent }, Cmd.none )
+                    ( { model
+                        | buffer = Buffer buffer
+                        , cursor = cursorFromPosition position
+                        , register = RegisterString wordContent
+                      }
+                    , Cmd.none
+                    )
 
         MoveCursor direction ->
             let

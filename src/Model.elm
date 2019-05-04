@@ -103,13 +103,16 @@ type Word
     = Word Position String
 
 
-type TextObject
-    = InWord
-
-
+{-| Register (clipboard) can hold a string or line
+-}
 type Register
     = RegisterString String
     | RegisterLine String
+
+
+type TextObject
+    = -- "inner word", select [count] words (see |word|). White space between words is counted too.
+      InWord
 
 
 type Command

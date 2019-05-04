@@ -270,10 +270,16 @@ update msg model =
                                 (Cursor line (char + n))
                                 (Cursor line maxChar)
 
-                        Left ->
-                            ifThenElse (char > 0)
-                                (cursorMoveLeft (cursorInMode model.mode model.buffer model.cursor))
-                                model.cursor
+                        Left n ->
+                            if char - n >= 0 then
+                                let
+                                    (Cursor line_ char_) =
+                                        cursorInMode model.mode model.buffer model.cursor
+                                in
+                                Cursor line_ (char_ - n)
+
+                            else
+                                cursorMoveLineBegin model.cursor
 
                         LineBegin ->
                             Cursor line 0
@@ -483,7 +489,7 @@ handleNormalMode _ ({ cursor, keyStrokes } as model) =
                 "X" :: _ ->
                     ifThenElse
                         (cursorChar > 0)
-                        [ DeleteChar cursorLine (cursorChar - 1), MoveCursor Left ]
+                        [ DeleteChar cursorLine (cursorChar - 1), MoveCursor (Left 1) ]
                         []
 
                 "0" :: _ ->
@@ -517,7 +523,7 @@ handleNormalMode _ ({ cursor, keyStrokes } as model) =
                     [ MoveCursor LineEnd ]
 
                 "h" :: _ ->
-                    [ MoveCursor Left ]
+                    [ MoveCursor (Left 1) ]
 
                 "j" :: _ ->
                     [ MoveCursor Down ]

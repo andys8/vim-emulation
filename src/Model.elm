@@ -55,9 +55,8 @@ type Msg
 type CursorDirection
     = Up
     | Down
+    | Left Int
     | Right Int
-    | Left
-      -- TODO: LeftN
     | LineBegin
     | LineEnd
     | FirstWORDinLine

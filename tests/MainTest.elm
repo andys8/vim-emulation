@@ -22,6 +22,11 @@ all =
                     [ "i", "Escape" ]
                         |> initWithKeySequence
                         |> expectMode Normal
+            , test "Enter insert mode" <|
+                \_ ->
+                    [ "i" ]
+                        |> initWithKeySequence
+                        |> expectMode Insert
             , test "Type a word" <|
                 \_ ->
                     [ "i", "a", "s", "d", "f", "Escape" ]
@@ -118,7 +123,7 @@ all =
                     initModelWithBuffer "ab\ncd"
                         |> keySequence [ "j", "a", "x" ]
                         |> expectBuffer "ab\ncxd"
-            , test "insert to begin of line with i" <|
+            , test "insert when at begin of line with i" <|
                 \_ ->
                     initModelWithBuffer "ab"
                         |> keySequence [ "i", "x" ]
@@ -223,7 +228,7 @@ all =
                     initModelWithBuffer "ab\ncd"
                         |> keySequence [ "i", "Delete", "Delete", "Delete", "Delete" ]
                         |> expectBuffer "d"
-            , describe "Delete InWord"
+            , describe "Delete in word"
                 [ test "single word" <|
                     \_ ->
                         initModelWithBuffer "ab"
@@ -274,6 +279,61 @@ all =
                                 [ expectBuffer "ab  cdef"
                                 , expectCursorAt "d"
                                 ]
+                , test "not triggering insert mode accidentally" <|
+                    \_ ->
+                        initWithKeySequence [ "d", "i" ]
+                            |> expectMode Normal
+                ]
+            , describe "Yank in word"
+                [ test "yank a word and paste it in front" <|
+                    \_ ->
+                        initModelWithBuffer "abc"
+                            |> keySequence [ "l", "y", "i", "w", "P" ]
+                            |> Expect.all
+                                [ expectBuffer "abcabc"
+                                , expectCursorAt "c"
+                                ]
+                , test "yank a word and paste in next line" <|
+                    \_ ->
+                        initModelWithBuffer "abc"
+                            |> keySequence [ "y", "i", "w", "o", "Escape", "p" ]
+                            |> expectBuffer "abc\nabc"
+                , test "jumps to word begin" <|
+                    \_ ->
+                        initModelWithBuffer "abc"
+                            |> keySequence [ "l", "y", "i", "w" ]
+                            |> expectCursorAt "a"
+                , test "not triggering insert mode accidentally" <|
+                    \_ ->
+                        initWithKeySequence [ "y", "i" ]
+                            |> expectMode Normal
+                ]
+            , describe "Change in word"
+                [ test "changes to Insert mode" <|
+                    \_ ->
+                        initWithKeySequence [ "c", "i", "w" ]
+                            |> expectMode Insert
+                , test "change a word in the middle" <|
+                    \_ ->
+                        initModelWithBuffer "ab cd ef"
+                            |> keySequence [ "e", "e", "c", "i", "w", "x", "y", "z", "Escape" ]
+                            |> Expect.all
+                                [ expectBuffer "ab xyz ef"
+                                , expectMode Normal
+                                , expectCursorAt "z"
+                                ]
+                , test "change also yanks the word" <|
+                    \_ ->
+                        initModelWithBuffer "abc"
+                            |> keySequence [ "c", "i", "w", "d", "e", "Escape", "p" ]
+                            |> Expect.all
+                                [ expectBuffer "deabc"
+                                , expectCursorAt "c"
+                                ]
+                , test "not triggering insert mode accidentally" <|
+                    \_ ->
+                        initWithKeySequence [ "c", "i" ]
+                            |> expectMode Normal
                 ]
             ]
         ]

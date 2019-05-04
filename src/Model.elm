@@ -1,5 +1,6 @@
 module Model exposing
     ( Buffer(..)
+    , Command(..)
     , Cursor(..)
     , CursorDirection(..)
     , Mode(..)
@@ -41,7 +42,7 @@ type Msg
     | ClearLine Int
     | DeleteChar Int Int
     | DeleteLine Int
-    | DeleteTextObject TextObject
+    | ApplyCommandOnTextObject Command TextObject
     | InsertNewLine Int
     | KeyDown String
     | MoveCursor CursorDirection
@@ -109,3 +110,9 @@ type TextObject
 type Register
     = RegisterString String
     | RegisterLine String
+
+
+type Command
+    = DeleteCommand
+    | YankCommand
+    | ChangeCommand

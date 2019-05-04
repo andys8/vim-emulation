@@ -7,6 +7,7 @@ import List.Extra
 import Model
     exposing
         ( Buffer(..)
+        , Command(..)
         , Cursor(..)
         , CursorDirection(..)
         , Mode(..)
@@ -203,7 +204,7 @@ update msg model =
             in
             ( { model | buffer = buffer, cursor = cursor }, Cmd.none )
 
-        DeleteTextObject textObject ->
+        ApplyCommandOnTextObject command textObject ->
             case textObject of
                 InWord ->
                     let
@@ -219,12 +220,22 @@ update msg model =
                             splitBufferContent position model.buffer
 
                         buffer =
-                            before ++ String.dropLeft (String.length wordContent) (middle ++ after)
+                            ifThenElse
+                                (command == YankCommand)
+                                model.buffer
+                                (Buffer <| before ++ String.dropLeft (String.length wordContent) (middle ++ after))
+
+                        mode =
+                            ifThenElse
+                                (command == ChangeCommand)
+                                Insert
+                                model.mode
                     in
                     ( { model
-                        | buffer = Buffer buffer
-                        , cursor = cursorFromPosition position
+                        | cursor = cursorFromPosition position
                         , register = RegisterString wordContent
+                        , buffer = buffer
+                        , mode = mode
                       }
                     , Cmd.none
                     )
@@ -435,11 +446,13 @@ handleNormalMode _ ({ cursor, keyStrokes } as model) =
         msgs =
             case keyStrokes of
                 "w" :: "i" :: "d" :: _ ->
-                    [ DeleteTextObject InWord, ActionExecuted ]
+                    [ ApplyCommandOnTextObject DeleteCommand InWord, ActionExecuted ]
 
-                "i" :: "d" :: _ ->
-                    -- Block insert mode when deleting
-                    []
+                "w" :: "i" :: "c" :: _ ->
+                    [ ApplyCommandOnTextObject ChangeCommand InWord, ActionExecuted ]
+
+                "w" :: "i" :: "y" :: _ ->
+                    [ ApplyCommandOnTextObject YankCommand InWord, ActionExecuted ]
 
                 "d" :: "d" :: _ ->
                     [ YankLine cursorLine, DeleteLine cursorLine, ActionExecuted ]
@@ -450,8 +463,12 @@ handleNormalMode _ ({ cursor, keyStrokes } as model) =
                 "g" :: "g" :: _ ->
                     [ MoveCursor FirstLine, MoveCursor FirstWORDinLine, ActionExecuted ]
 
-                "i" :: _ ->
-                    [ SetMode Insert ]
+                "i" :: keys ->
+                    -- Ignore when CommandOnTextObject (e.g. "ciw") is the goal
+                    ifThenElse
+                        (List.member (List.head keys |> Maybe.withDefault "") [ "y", "c", "d" ])
+                        []
+                        [ SetMode Insert ]
 
                 "I" :: _ ->
                     [ SetMode Insert, MoveCursor LineBegin ]

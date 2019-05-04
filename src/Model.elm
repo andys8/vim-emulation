@@ -6,6 +6,7 @@ module Model exposing
     , Model
     , Msg(..)
     , Position(..)
+    , TextObject(..)
     , WORD(..)
     , Word(..)
     , initModel
@@ -35,18 +36,19 @@ initModel =
 
 type Msg
     = NoOp
-    | KeyDown String
-    | SetMode Mode
-    | SetCursor Cursor
     | ActionExecuted
-    | InsertNewLine Int
-    | YankLine Int
     | ClearLine Int
-    | DeleteLine Int
     | DeleteChar Int Int
-    | PasteBefore
-    | PasteAfter
+    | DeleteLine Int
+    | DeleteTextObject TextObject
+    | InsertNewLine Int
+    | KeyDown String
     | MoveCursor CursorDirection
+    | PasteAfter
+    | PasteBefore
+    | SetCursor Cursor
+    | SetMode Mode
+    | YankLine Int
 
 
 type CursorDirection
@@ -97,3 +99,7 @@ tabs, <EOL>). An empty line is also considered to be a word.
 -}
 type Word
     = Word Position String
+
+
+type TextObject
+    = InWord

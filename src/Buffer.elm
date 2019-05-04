@@ -15,8 +15,10 @@ module Buffer exposing
     , cursorMoveRight
     , cursorMoveToEndOfLine
     , cursorMoveUp
+    , cursorToPosition
     , isPositionAfterCursor
     , isPositionBeforeCursor
+    , isPositionBeforeOrEqualToCursor
     , lastCharIndexInLine
     , lineToWORDs
     , lineToWords
@@ -51,10 +53,15 @@ bufferToLines (Buffer buffer) =
 
 
 currentBufferLine : Cursor -> Buffer -> String
-currentBufferLine cursor buffer =
+currentBufferLine cursor =
+    lineAtPosition (cursorToPosition cursor)
+
+
+lineAtPosition : Position -> Buffer -> String
+lineAtPosition (Position line _) buffer =
     buffer
         |> bufferToLines
-        |> List.Extra.getAt (cursorLine_ cursor)
+        |> List.Extra.getAt line
         -- Note: Not sure if this is a good idea.
         -- Shouldn't be possible and maybe handling is overhead, but defaulting can lead to errors.
         |> Maybe.withDefault ""
@@ -119,23 +126,23 @@ lastCharIndexInLine cursor buffer =
     String.length (currentBufferLine cursor buffer) - 1
 
 
-splitBufferContent : Cursor -> Buffer -> SplitResult
-splitBufferContent ((Cursor cursorLine cursorChar) as cursor) buffer =
+splitBufferContent : Position -> Buffer -> SplitResult
+splitBufferContent ((Position posLine posChar) as position) buffer =
     let
         lines =
             bufferToLines buffer
 
         linesBefore =
-            List.take cursorLine lines
+            List.take posLine lines
 
         currentLine =
-            currentBufferLine cursor buffer
+            lineAtPosition position buffer
 
         linesAfter =
-            List.drop (cursorLine + 1) lines
+            List.drop (posLine + 1) lines
 
         splittedLine =
-            splitLine cursorChar currentLine
+            splitLine posChar currentLine
     in
     { before = String.join "\n" (linesBefore ++ [ splittedLine.before ])
     , middle = splittedLine.middle
@@ -198,6 +205,11 @@ isPositionBeforeCursor (Cursor cursorLine cursorChar) (Position wordLine wordCha
     wordLine < cursorLine || (cursorLine == wordLine && wordChar < cursorChar)
 
 
+isPositionBeforeOrEqualToCursor : Cursor -> Position -> Bool
+isPositionBeforeOrEqualToCursor (Cursor cursorLine cursorChar) (Position wordLine wordChar) =
+    wordLine < cursorLine || (cursorLine == wordLine && wordChar <= cursorChar)
+
+
 wordToPosition : WordPositionType -> Word -> Position
 wordToPosition positionType (Word position content) =
     positionForType positionType position content
@@ -256,3 +268,8 @@ cursorChar_ (Cursor _ cursorChar) =
 cursorLine_ : Cursor -> Int
 cursorLine_ (Cursor cursorLine _) =
     cursorLine
+
+
+cursorToPosition : Cursor -> Position
+cursorToPosition (Cursor line char) =
+    Position line char

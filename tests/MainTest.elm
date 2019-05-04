@@ -2,7 +2,6 @@ module MainTest exposing (all)
 
 import Buffer exposing (..)
 import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer)
 import List
 import Main exposing (update)
 import Model exposing (Buffer(..), Cursor(..), Mode(..), Model, Msg(..), initModel)
@@ -38,16 +37,23 @@ all =
                     [ "o", "a", "Escape", "o", "b" ]
                         |> initWithKeySequence
                         |> expectBuffer "\na\nb"
-            , test "Delete lines with dd" <|
-                \_ ->
-                    initModelWithBuffer "a\nb"
-                        |> keySequence [ "d", "d", "d", "d" ]
-                        |> expectBuffer ""
-            , test "Delete first line of multiple lines with dd" <|
-                \_ ->
-                    initModelWithBuffer "a\nb"
-                        |> keySequence [ "d", "d" ]
-                        |> expectBuffer "b"
+            , describe "Delete line with dd"
+                [ test "Delete two lines" <|
+                    \_ ->
+                        initModelWithBuffer "a\nb"
+                            |> keySequence [ "d", "d", "d", "d" ]
+                            |> expectBuffer ""
+                , test "Delete first line of multiple lines" <|
+                    \_ ->
+                        initModelWithBuffer "a\nb"
+                            |> keySequence [ "d", "d" ]
+                            |> expectBuffer "b"
+                , test "Delete and paste a line" <|
+                    \_ ->
+                        initModelWithBuffer "abc"
+                            |> keySequence [ "d", "d", "p" ]
+                            |> expectBuffer "\nabc"
+                ]
             , test "Yank line and paste twice" <|
                 \_ ->
                     initModelWithBuffer "ab"
@@ -206,6 +212,31 @@ all =
                     initModelWithBuffer "ab\ncd"
                         |> keySequence [ "i", "Delete", "Delete", "Delete", "Delete" ]
                         |> expectBuffer "d"
+            , describe "Delete InWord"
+                [ test "single word" <|
+                    \_ ->
+                        initModelWithBuffer "ab"
+                            |> keySequence [ "d", "i", "w" ]
+                            |> expectBuffer ""
+                , test "two words" <|
+                    \_ ->
+                        initModelWithBuffer "ab cd"
+                            |> keySequence [ "w", "d", "i", "w" ]
+                            |> expectBuffer "ab "
+                , skip <|
+                    test "delete and paste a single word" <|
+                        \_ ->
+                            initModelWithBuffer "ab"
+                                |> keySequence [ "d", "i", "w", "p", "p" ]
+                                |> expectBuffer "abab"
+                , skip <|
+                    test "delete and paste a word in a line" <|
+                        \_ ->
+                            initModelWithBuffer "ab cd"
+                                |> keySequence [ "d", "i", "w", "p", "p" ]
+                                |> expectBuffer " ababcd"
+                , todo "delete spaces between words"
+                ]
             ]
         ]
 
@@ -252,6 +283,6 @@ expectCursorAt char ( model, _ ) =
             cursorInMode model.mode model.buffer model.cursor
 
         { middle } =
-            splitBufferContent cursor model.buffer
+            splitBufferContent (cursorToPosition cursor) model.buffer
     in
     Expect.equal char middle

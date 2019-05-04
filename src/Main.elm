@@ -13,7 +13,9 @@ import Model
         , Model
         , Msg(..)
         , Position(..)
+        , TextObject(..)
         , WORD(..)
+        , Word(..)
         , initModel
         )
 import Platform.Sub as Sub
@@ -110,6 +112,7 @@ update msg model =
             ( { model | register = line }, Cmd.none )
 
         PasteBefore ->
+            -- TODO: Implement for lines and words
             -- Note: This is implemented for single lines only
             let
                 ( beforeLines, afterLines ) =
@@ -125,6 +128,7 @@ update msg model =
             ( { model | buffer = buffer }, Cmd.none )
 
         PasteAfter ->
+            -- TODO: Implement for lines and words
             -- Note: This is implemented for single lines only
             let
                 ( beforeLines, afterLines ) =
@@ -172,7 +176,7 @@ update msg model =
         DeleteChar line char ->
             let
                 { before, after } =
-                    splitBufferContent (Cursor line char) model.buffer
+                    splitBufferContent (Position line char) model.buffer
 
                 buffer =
                     Buffer (before ++ after)
@@ -181,6 +185,34 @@ update msg model =
                     cursorInMode model.mode buffer model.cursor
             in
             ( { model | buffer = buffer, cursor = cursor }, Cmd.none )
+
+        DeleteTextObject textObject ->
+            case textObject of
+                InWord ->
+                    let
+                        (Word position wordContent) =
+                            model.buffer
+                                |> bufferToWords
+                                |> List.filter (wordToPosition WordBegin >> isPositionBeforeOrEqualToCursor model.cursor)
+                                |> List.Extra.last
+                                |> Maybe.withDefault (Word (Position 0 0) "")
+
+                        { before, middle, after } =
+                            splitBufferContent position model.buffer
+
+                        deleteCharsCount =
+                            String.length wordContent
+
+                        buffer =
+                            before ++ String.dropLeft deleteCharsCount (middle ++ after)
+
+                        (Position posLine posChar) =
+                            position
+
+                        cursor =
+                            Cursor posLine (max 0 (posChar - 1))
+                    in
+                    ( { model | buffer = Buffer buffer, cursor = cursor, register = wordContent }, Cmd.none )
 
         MoveCursor direction ->
             let
@@ -309,7 +341,7 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
                 cursor
 
             { before, middle, after } =
-                splitBufferContent cursor buffer
+                splitBufferContent (cursorToPosition cursor) buffer
 
             ( buffer_, msgs ) =
                 case keyDown of
@@ -372,6 +404,13 @@ handleNormalMode _ ({ cursor, keyStrokes } as model) =
 
         msgs =
             case keyStrokes of
+                "w" :: "i" :: "d" :: _ ->
+                    [ DeleteTextObject InWord, ActionExecuted ]
+
+                "i" :: "d" :: _ ->
+                    -- Block insert mode when deleting
+                    []
+
                 "d" :: "d" :: _ ->
                     [ YankLine cursorLine, DeleteLine cursorLine, ActionExecuted ]
 

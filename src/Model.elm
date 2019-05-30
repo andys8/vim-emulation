@@ -16,8 +16,7 @@ module Model exposing
 
 
 type alias Model =
-    { allKeyStrokes : List String
-    , buffer : Buffer
+    { buffer : Buffer
     , mode : Mode
     , cursor : Cursor
     , keyStrokes : List String
@@ -27,8 +26,7 @@ type alias Model =
 
 initModel : Model
 initModel =
-    { allKeyStrokes = []
-    , buffer = Buffer ""
+    { buffer = Buffer ""
     , mode = Normal
     , cursor = Cursor 0 0
     , keyStrokes = []

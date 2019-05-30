@@ -59,14 +59,8 @@ update msg model =
                     else
                         handleNormalMode
 
-                allKeyStrokes =
-                    key :: model.allKeyStrokes
-
-                keyStrokes =
-                    key :: model.keyStrokes
-
                 ( newModel, msgs ) =
-                    { model | allKeyStrokes = allKeyStrokes, keyStrokes = keyStrokes }
+                    { model | keyStrokes = key :: model.keyStrokes }
                         |> handleKey key
             in
             ( newModel, Cmd.none )

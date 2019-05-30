@@ -1,8 +1,9 @@
-port module Main exposing (main, update)
+module Main exposing (main, update)
 
 import Action exposing (Action(..), ActionChange(..), ActionNoChange(..), isChangeAction)
 import Browser
 import Browser.Dom
+import Browser.Navigation as Navigation
 import Buffer exposing (..)
 import List.Extra
 import Model
@@ -25,9 +26,6 @@ import Platform.Sub as Sub
 import Task
 import Update.Extra exposing (sequence)
 import View exposing (viewDocument)
-
-
-port quitVim : () -> Cmd msg
 
 
 main : Program () Model Msg
@@ -126,7 +124,7 @@ update msg model =
                     text
                     [ "q", "qa", "q!", "wq", "x", "x!" ]
             then
-                ( model, quitVim () )
+                ( model, quitVim )
 
             else
                 ( model, Cmd.none )
@@ -625,6 +623,11 @@ handleCommandMode key model =
 
             else
                 ( { model | commandLine = model.commandLine ++ key_ }, [] )
+
+
+quitVim : Cmd a
+quitVim =
+    Navigation.load "https://github.com/andys8/vim-emulation"
 
 
 

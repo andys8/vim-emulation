@@ -1,6 +1,6 @@
 module Main exposing (main, update)
 
-import Action exposing (Action(..), Change(..), Motion(..), isChangeAction)
+import Action exposing (Action(..), ActionChange(..), ActionNoChange(..), isChangeAction)
 import Browser
 import Browser.Dom
 import Buffer exposing (..)
@@ -53,11 +53,15 @@ update msg model =
         KeyDown key ->
             let
                 handleKey =
-                    if model.mode == Insert then
-                        handleInsertMode
+                    case model.mode of
+                        Insert ->
+                            handleInsertMode
 
-                    else
-                        handleNormalMode
+                        Normal ->
+                            handleNormalMode
+
+                        Command ->
+                            handleCommandMode
             in
             model
                 |> handleKey key
@@ -102,7 +106,7 @@ update msg model =
                 -- TODO: E.g. 'ciw' has to include the actual change in insert mode
                 -- TODO: Repeat changes done in insert mode
                 isLastChangeAction action =
-                    isChangeAction action && action /= ActionChange Action_Dot
+                    isChangeAction action && action /= ActionChangeType Action_Dot
 
                 msgs =
                     model.actions
@@ -383,7 +387,7 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
     if keyDown == "Escape" then
         ( model, [ SetMode Normal ] )
 
-    else if List.member keyDown ignoredKeysInInsertMode then
+    else if List.member keyDown ignoredTextInsertKeys then
         ( model, [] )
 
     else
@@ -468,116 +472,153 @@ handleNormalMode key model =
 executeAction : Cursor -> Action -> List Msg
 executeAction (Cursor cursorLine cursorChar) action =
     case action of
-        ActionChange Action_diw ->
-            [ ApplyCommandOnTextObject DeleteCommand InWord ]
+        ActionChangeType action_ ->
+            case action_ of
+                Action_diw ->
+                    [ ApplyCommandOnTextObject DeleteCommand InWord ]
 
-        ActionChange Action_ciw ->
-            [ ApplyCommandOnTextObject ChangeCommand InWord ]
+                Action_ciw ->
+                    [ ApplyCommandOnTextObject ChangeCommand InWord ]
 
-        ActionMotion Action_yiw ->
-            [ ApplyCommandOnTextObject YankCommand InWord ]
+                Action_dd ->
+                    [ YankLine cursorLine, DeleteLine cursorLine ]
 
-        ActionChange Action_dd ->
-            [ YankLine cursorLine, DeleteLine cursorLine ]
+                Action_i ->
+                    [ SetMode Insert ]
 
-        ActionMotion Action_yy ->
-            [ YankLine cursorLine ]
+                Action_I ->
+                    [ SetMode Insert, MoveCursor LineBegin ]
 
-        ActionMotion Action_gg ->
-            [ MoveCursor FirstLine, MoveCursor FirstWORDinLine ]
+                Action_Dot ->
+                    [ RepeatLastChangeAction ]
 
-        ActionChange Action_i ->
-            [ SetMode Insert ]
+                Action_S ->
+                    [ ClearLine cursorLine, SetMode Insert ]
 
-        ActionChange Action_I ->
-            [ SetMode Insert, MoveCursor LineBegin ]
+                Action_a ->
+                    [ SetMode Insert, MoveCursor (Right 1) ]
 
-        ActionChange Action_Dot ->
-            [ RepeatLastChangeAction ]
+                Action_A ->
+                    [ SetMode Insert, MoveCursor LineEnd ]
 
-        ActionChange Action_S ->
-            [ ClearLine cursorLine, SetMode Insert ]
+                Action_p ->
+                    [ PasteAfter ]
 
-        ActionChange Action_a ->
-            [ SetMode Insert, MoveCursor (Right 1) ]
+                Action_P ->
+                    [ PasteBefore ]
 
-        ActionChange Action_A ->
-            [ SetMode Insert, MoveCursor LineEnd ]
+                Action_o ->
+                    [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]
 
-        ActionChange Action_p ->
-            [ PasteAfter ]
+                Action_O ->
+                    [ InsertNewLine cursorLine, SetMode Insert, MoveCursor LineBegin ]
 
-        ActionChange Action_P ->
-            [ PasteBefore ]
+                Action_Delete ->
+                    [ DeleteChar cursorLine cursorChar ]
 
-        ActionChange Action_o ->
-            [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]
+                Action_x ->
+                    [ DeleteChar cursorLine cursorChar ]
 
-        ActionChange Action_O ->
-            [ InsertNewLine cursorLine, SetMode Insert, MoveCursor LineBegin ]
+                Action_X ->
+                    if cursorChar > 0 then
+                        [ DeleteChar cursorLine (cursorChar - 1), MoveCursor (Left 1) ]
 
-        ActionChange Action_Delete ->
-            [ DeleteChar cursorLine cursorChar ]
+                    else
+                        []
 
-        ActionChange Action_x ->
-            [ DeleteChar cursorLine cursorChar ]
+        ActionNoChangeType action_ ->
+            case action_ of
+                Action_yiw ->
+                    [ ApplyCommandOnTextObject YankCommand InWord ]
 
-        ActionChange Action_X ->
-            if cursorChar > 0 then
-                [ DeleteChar cursorLine (cursorChar - 1), MoveCursor (Left 1) ]
+                Action_yy ->
+                    [ YankLine cursorLine ]
+
+                Action_gg ->
+                    [ MoveCursor FirstLine, MoveCursor FirstWORDinLine ]
+
+                Action_0 ->
+                    [ MoveCursor LineBegin ]
+
+                Action_Graph ->
+                    [ MoveCursor FirstWORDinLine ]
+
+                Action_G ->
+                    [ MoveCursor LastLine, MoveCursor FirstWORDinLine ]
+
+                Action_w ->
+                    [ MoveCursor NextWord ]
+
+                Action_W ->
+                    [ MoveCursor NextWORD ]
+
+                Action_b ->
+                    [ MoveCursor PrevWord ]
+
+                Action_B ->
+                    [ MoveCursor PrevWORD ]
+
+                Action_e ->
+                    [ MoveCursor NextWordEnd ]
+
+                Action_E ->
+                    [ MoveCursor NextWORDEnd ]
+
+                Action_Dollar ->
+                    [ MoveCursor LineEnd ]
+
+                Action_h ->
+                    [ MoveCursor (Left 1) ]
+
+                Action_j ->
+                    [ MoveCursor Down ]
+
+                Action_k ->
+                    [ MoveCursor Up ]
+
+                Action_l ->
+                    [ MoveCursor (Right 1) ]
+
+                Action_Colon ->
+                    [ SetMode Command ]
+
+
+handleCommandMode : String -> Model -> ( Model, List Msg )
+handleCommandMode key model =
+    let
+        ignoredKeys =
+            "Tab" :: "Delete" :: ignoredTextInsertKeys
+    in
+    case key of
+        "Enter" ->
+            -- TODO: Implement handling some texts
+            ( { model | commandLine = "" }, [ SetMode Normal ] )
+
+        "Backspace" ->
+            case model.commandLine of
+                "" ->
+                    ( model, [ SetMode Normal ] )
+
+                cl ->
+                    ( { model | commandLine = String.dropRight 1 cl }, [] )
+
+        "Escape" ->
+            ( { model | commandLine = "" }, [ SetMode Normal ] )
+
+        key_ ->
+            if List.member key_ ignoredKeys then
+                ( model, [] )
 
             else
-                []
-
-        ActionMotion Action_0 ->
-            [ MoveCursor LineBegin ]
-
-        ActionMotion Action_Graph ->
-            [ MoveCursor FirstWORDinLine ]
-
-        ActionMotion Action_G ->
-            [ MoveCursor LastLine, MoveCursor FirstWORDinLine ]
-
-        ActionMotion Action_w ->
-            [ MoveCursor NextWord ]
-
-        ActionMotion Action_W ->
-            [ MoveCursor NextWORD ]
-
-        ActionMotion Action_b ->
-            [ MoveCursor PrevWord ]
-
-        ActionMotion Action_B ->
-            [ MoveCursor PrevWORD ]
-
-        ActionMotion Action_e ->
-            [ MoveCursor NextWordEnd ]
-
-        ActionMotion Action_E ->
-            [ MoveCursor NextWORDEnd ]
-
-        ActionMotion Action_Dollar ->
-            [ MoveCursor LineEnd ]
-
-        ActionMotion Action_h ->
-            [ MoveCursor (Left 1) ]
-
-        ActionMotion Action_j ->
-            [ MoveCursor Down ]
-
-        ActionMotion Action_k ->
-            [ MoveCursor Up ]
-
-        ActionMotion Action_l ->
-            [ MoveCursor (Right 1) ]
+                ( { model | commandLine = model.commandLine ++ key_ }, [] )
 
 
 
 -- Contstants
 
 
-ignoredKeysInInsertMode : List String
-ignoredKeysInInsertMode =
+ignoredTextInsertKeys : List String
+ignoredTextInsertKeys =
     -- TODO: Extend list with media keys
     [ "Alt"
     , "AltGraph"
@@ -586,6 +627,8 @@ ignoredKeysInInsertMode =
     , "ArrowRight"
     , "ArrowUp"
     , "Control"
+    , "Home"
+    , "End"
     , "F1"
     , "F10"
     , "F11"

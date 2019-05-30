@@ -24,6 +24,7 @@ type alias Model =
     , keyStrokes : List String
     , register : Register
     , actions : List Action
+    , commandLine : String
     }
 
 
@@ -35,6 +36,7 @@ initModel =
     , keyStrokes = []
     , register = RegisterString ""
     , actions = []
+    , commandLine = ""
     }
 
 
@@ -81,6 +83,7 @@ type Buffer
 type Mode
     = Normal
     | Insert
+    | Command
 
 
 type Cursor

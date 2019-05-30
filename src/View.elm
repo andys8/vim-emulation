@@ -45,7 +45,7 @@ view model =
             [ viewBufferNames
             , viewBuffer model
             , viewAirline model
-            , viewCommandLine
+            , viewCommandLine model
             ]
 
 
@@ -84,7 +84,7 @@ viewBuffer { cursor, buffer, mode } =
 viewBufferLine : Mode -> Cursor -> Int -> String -> Element msg
 viewBufferLine mode cursor lineNumber lineContent =
     row [ height (minimum fontSize fill) ] <|
-        if lineNumber == cursorLine_ cursor then
+        if lineNumber == cursorLine_ cursor && mode /= Command then
             let
                 (Cursor _ normalizedCursorChar) =
                     cursorInModeLine mode lineContent cursor
@@ -144,11 +144,28 @@ viewAirline { mode, cursor, buffer } =
         ]
 
 
-viewCommandLine : Element msg
-viewCommandLine =
+viewCommandLine : Model -> Element msg
+viewCommandLine { mode, commandLine } =
+    let
+        content =
+            if mode == Command then
+                [ text ":"
+                , text commandLine
+                , viewCursor ""
+                ]
+
+            else
+                [ text " " ]
+    in
     row
-        [ alignBottom, padding 4, Background.color colors.bufferBg, Font.color colors.bufferFont, height (minimum fontSize fill), width fill ]
-        [ text " " ]
+        [ alignBottom
+        , padding 4
+        , Background.color colors.bufferBg
+        , Font.color colors.bufferFont
+        , height (minimum fontSize fill)
+        , width fill
+        ]
+        content
 
 
 modeToString : Mode -> String
@@ -157,7 +174,7 @@ modeToString mode =
         Insert ->
             "Insert"
 
-        Normal ->
+        _ ->
             "Normal"
 
 

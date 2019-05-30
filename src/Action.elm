@@ -1,12 +1,12 @@
-module Action exposing (Action(..), Change(..), Motion(..), fromKeyStrokes, isChangeAction)
+module Action exposing (Action(..), ActionChange(..), ActionNoChange(..), fromKeyStrokes, isChangeAction)
 
 
 type Action
-    = ActionChange Change
-    | ActionMotion Motion
+    = ActionChangeType ActionChange
+    | ActionNoChangeType ActionNoChange
 
 
-type Change
+type ActionChange
     = Action_diw
     | Action_ciw
     | Action_dd
@@ -25,7 +25,7 @@ type Change
     | Action_Dot
 
 
-type Motion
+type ActionNoChange
     = Action_h
     | Action_j
     | Action_k
@@ -43,28 +43,29 @@ type Motion
     | Action_e
     | Action_E
     | Action_Dollar
+    | Action_Colon
 
 
 fromKeyStrokes : List String -> Maybe Action
 fromKeyStrokes keyStrokes =
     case keyStrokes of
         "w" :: "i" :: "d" :: _ ->
-            Just <| ActionChange Action_diw
+            Just <| ActionChangeType Action_diw
 
         "w" :: "i" :: "c" :: _ ->
-            Just <| ActionChange Action_ciw
+            Just <| ActionChangeType Action_ciw
 
         "w" :: "i" :: "y" :: _ ->
-            Just <| ActionMotion Action_yiw
+            Just <| ActionNoChangeType Action_yiw
 
         "d" :: "d" :: _ ->
-            Just <| ActionChange Action_dd
+            Just <| ActionChangeType Action_dd
 
         "y" :: "y" :: _ ->
-            Just <| ActionMotion Action_yy
+            Just <| ActionNoChangeType Action_yy
 
         "g" :: "g" :: _ ->
-            Just <| ActionMotion Action_gg
+            Just <| ActionNoChangeType Action_gg
 
         -- Ignoring to prevent insert mode instead e.g. "diw"
         "i" :: "d" :: _ ->
@@ -77,85 +78,88 @@ fromKeyStrokes keyStrokes =
             Nothing
 
         "i" :: _ ->
-            Just <| ActionChange Action_i
+            Just <| ActionChangeType Action_i
 
         "I" :: _ ->
-            Just <| ActionChange Action_I
+            Just <| ActionChangeType Action_I
+
+        ":" :: _ ->
+            Just <| ActionNoChangeType Action_Colon
 
         "." :: _ ->
-            Just <| ActionChange Action_Dot
+            Just <| ActionChangeType Action_Dot
 
         "S" :: _ ->
-            Just <| ActionChange Action_S
+            Just <| ActionChangeType Action_S
 
         "a" :: _ ->
-            Just <| ActionChange Action_a
+            Just <| ActionChangeType Action_a
 
         "A" :: _ ->
-            Just <| ActionChange Action_A
+            Just <| ActionChangeType Action_A
 
         "p" :: _ ->
-            Just <| ActionChange Action_p
+            Just <| ActionChangeType Action_p
 
         "P" :: _ ->
-            Just <| ActionChange Action_P
+            Just <| ActionChangeType Action_P
 
         "o" :: _ ->
-            Just <| ActionChange Action_o
+            Just <| ActionChangeType Action_o
 
         "O" :: _ ->
-            Just <| ActionChange Action_O
+            Just <| ActionChangeType Action_O
 
         "Delete" :: _ ->
-            Just <| ActionChange Action_Delete
+            Just <| ActionChangeType Action_Delete
 
         "x" :: _ ->
-            Just <| ActionChange Action_x
+            Just <| ActionChangeType Action_x
 
         "X" :: _ ->
-            Just <| ActionChange Action_X
+            Just <| ActionChangeType Action_X
 
         "0" :: _ ->
-            Just <| ActionMotion Action_0
+            Just <| ActionNoChangeType Action_0
 
         "^" :: _ ->
-            Just <| ActionMotion Action_Graph
+            Just <| ActionNoChangeType Action_Graph
 
         "G" :: _ ->
-            Just <| ActionMotion Action_G
+            Just <| ActionNoChangeType Action_G
 
         "w" :: _ ->
-            Just <| ActionMotion Action_w
+            Just <| ActionNoChangeType Action_w
 
         "W" :: _ ->
-            Just <| ActionMotion Action_W
+            Just <| ActionNoChangeType Action_W
 
         "b" :: _ ->
-            Just <| ActionMotion Action_b
+            Just <| ActionNoChangeType Action_b
 
         "B" :: _ ->
-            Just <| ActionMotion Action_B
+            Just <| ActionNoChangeType Action_B
 
         "e" :: _ ->
-            Just <| ActionMotion Action_e
+            Just <| ActionNoChangeType Action_e
 
         "E" :: _ ->
-            Just <| ActionMotion Action_E
+            Just <| ActionNoChangeType Action_E
 
         "$" :: _ ->
-            Just <| ActionMotion Action_Dollar
+            Just <| ActionNoChangeType Action_Dollar
 
         "h" :: _ ->
-            Just <| ActionMotion Action_h
+            Just <| ActionNoChangeType Action_h
 
         "j" :: _ ->
-            Just <| ActionMotion Action_j
+            Just <| ActionNoChangeType Action_j
 
         "k" :: _ ->
-            Just <| ActionMotion Action_k
+            Just <| ActionNoChangeType Action_k
 
         "l" :: _ ->
-            Just <| ActionMotion Action_l
+            Just <| ActionNoChangeType Action_l
 
         _ ->
             Nothing
@@ -164,8 +168,8 @@ fromKeyStrokes keyStrokes =
 isChangeAction : Action -> Bool
 isChangeAction action =
     case action of
-        ActionChange _ ->
+        ActionChangeType _ ->
             True
 
-        ActionMotion _ ->
+        ActionNoChangeType _ ->
             False

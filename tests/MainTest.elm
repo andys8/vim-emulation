@@ -371,6 +371,41 @@ all =
                             (keySequence [ "d", "i", "w", "d", "i", "w", "d", "i", "w" ])
                             (keySequence [ "d", "i", "w", ".", "." ])
                 ]
+            , describe "Commandline mode"
+                [ test ": Enters commandline" <|
+                    \_ ->
+                        [ ":" ]
+                            |> initWithKeySequence
+                            |> expectMode Command
+                , test "Escape" <|
+                    \_ ->
+                        [ ":", "a", "b", "Escape" ]
+                            |> initWithKeySequence
+                            |> Expect.all [ expectMode Normal, expectCommandLine "" ]
+                , test "Write command" <|
+                    \_ ->
+                        [ ":", "q", "!" ]
+                            |> initWithKeySequence
+                            |> expectCommandLine "q!"
+                , test "Backspaces deletes chars" <|
+                    \_ ->
+                        [ ":", "a", "b", "Backspace" ]
+                            |> initWithKeySequence
+                            |> expectCommandLine "a"
+                , test "Backspaces can quit, if command line empty" <|
+                    \_ ->
+                        [ ":", "a", "Backspace", "Backspace" ]
+                            |> initWithKeySequence
+                            |> Expect.all
+                                [ expectCommandLine ""
+                                , expectMode Normal
+                                ]
+                , test "Case sensitive input" <|
+                    \_ ->
+                        [ ":", "a", "A" ]
+                            |> initWithKeySequence
+                            |> expectCommandLine "aA"
+                ]
             ]
         ]
 
@@ -398,6 +433,11 @@ keySequence keys =
 expectBuffer : String -> ( Model, Cmd Msg ) -> Expectation
 expectBuffer bufferContent =
     Tuple.first >> .buffer >> Expect.equal (Buffer bufferContent)
+
+
+expectCommandLine : String -> ( Model, Cmd Msg ) -> Expectation
+expectCommandLine commandLine =
+    Tuple.first >> .commandLine >> Expect.equal commandLine
 
 
 expectMode : Mode -> ( Model, Cmd Msg ) -> Expectation

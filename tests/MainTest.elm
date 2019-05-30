@@ -342,6 +342,19 @@ all =
                     \_ ->
                         initWithKeySequence [ "c", "i" ]
                             |> expectMode Normal
+                , describe "Repeat with dot (.)"
+                    [ test "Delete line" <|
+                        \_ ->
+                            initModelWithBuffer "a\nb\nc"
+                                |> keySequence [ "d", "d", "." ]
+                                |> expectBuffer "c"
+                    , test "Paste line" <|
+                        \_ ->
+                            initModelWithBuffer "a"
+                                |> keySequence [ "y", "y", "p", "." ]
+                                |> expectBuffer "a\na\na"
+                    , todo "Test that compares . with multiple times the same action"
+                    ]
                 ]
             ]
         ]

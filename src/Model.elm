@@ -53,6 +53,7 @@ type Msg
     | SetCursor Cursor
     | SetMode Mode
     | YankLine Int
+    | RepeatLastChangeAction
 
 
 type CursorDirection

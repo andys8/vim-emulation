@@ -1,6 +1,6 @@
 module Main exposing (main, update)
 
-import Action exposing (Action(..), Change(..), Motion(..))
+import Action exposing (Action(..), Change(..), Motion(..), isChangeAction)
 import Browser
 import Browser.Dom
 import Buffer exposing (..)
@@ -96,6 +96,20 @@ update msg model =
             ( { model | keyStrokes = [], actions = action :: model.actions }
             , Cmd.none
             )
+
+        RepeatLastChangeAction ->
+            let
+                isLastChangeAction action =
+                    isChangeAction action && action /= ActionChange Action_Dot
+
+                msgs =
+                    model.actions
+                        |> List.Extra.find isLastChangeAction
+                        |> Maybe.map (executeAction model.cursor)
+                        |> Maybe.withDefault []
+            in
+            ( model, Cmd.none )
+                |> sequence update msgs
 
         YankLine lineNumber ->
             let
@@ -475,6 +489,9 @@ executeAction (Cursor cursorLine cursorChar) action =
 
         ActionChange Action_I ->
             [ SetMode Insert, MoveCursor LineBegin ]
+
+        ActionChange Action_Dot ->
+            [ RepeatLastChangeAction ]
 
         ActionChange Action_S ->
             [ ClearLine cursorLine, SetMode Insert ]

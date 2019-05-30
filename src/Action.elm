@@ -1,4 +1,4 @@
-module Action exposing (Action(..), Change(..), Motion(..), fromKeyStrokes)
+module Action exposing (Action(..), Change(..), Motion(..), fromKeyStrokes, isChangeAction)
 
 
 type Action
@@ -22,6 +22,7 @@ type Change
     | Action_Delete
     | Action_x
     | Action_X
+    | Action_Dot
 
 
 type Motion
@@ -79,6 +80,9 @@ fromKeyStrokes keyStrokes =
 
         "I" :: _ ->
             Just <| ActionChange Action_I
+
+        "." :: _ ->
+            Just <| ActionChange Action_Dot
 
         "S" :: _ ->
             Just <| ActionChange Action_S
@@ -154,3 +158,13 @@ fromKeyStrokes keyStrokes =
 
         _ ->
             Nothing
+
+
+isChangeAction : Action -> Bool
+isChangeAction action =
+    case action of
+        ActionChange _ ->
+            True
+
+        ActionMotion _ ->
+            False

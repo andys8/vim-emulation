@@ -14,6 +14,8 @@ module Model exposing
     , initModel
     )
 
+import Action exposing (Action)
+
 
 type alias Model =
     { buffer : Buffer
@@ -21,6 +23,7 @@ type alias Model =
     , cursor : Cursor
     , keyStrokes : List String
     , register : Register
+    , actions : List Action
     }
 
 
@@ -31,12 +34,13 @@ initModel =
     , cursor = Cursor 0 0
     , keyStrokes = []
     , register = RegisterString ""
+    , actions = []
     }
 
 
 type Msg
     = NoOp
-    | ActionExecuted
+    | ActionExecuted Action
     | ClearLine Int
     | DeleteChar Int Int
     | DeleteLine Int

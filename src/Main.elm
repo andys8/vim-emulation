@@ -92,8 +92,10 @@ update msg model =
             in
             ( { model | buffer = Buffer buffer }, Cmd.none )
 
-        ActionExecuted ->
-            ( { model | keyStrokes = [] }, Cmd.none )
+        ActionExecuted action ->
+            ( { model | keyStrokes = [], actions = action :: model.actions }
+            , Cmd.none
+            )
 
         YankLine lineNumber ->
             let
@@ -434,34 +436,39 @@ handleNormalMode key model =
     let
         keyStrokes =
             key :: model.keyStrokes
+
+        actionToMsgs action =
+            executeAction model.cursor action ++ [ ActionExecuted action ]
+
+        msgs =
+            keyStrokes
+                |> Action.fromKeyStrokes
+                |> Maybe.map actionToMsgs
+                |> Maybe.withDefault []
     in
-    ( { model | keyStrokes = keyStrokes }
-    , Action.fromKeyStrokes keyStrokes
-        |> Maybe.map (handleActionInNormalMode model.cursor)
-        |> Maybe.withDefault []
-    )
+    ( { model | keyStrokes = keyStrokes }, msgs )
 
 
-handleActionInNormalMode : Cursor -> Action -> List Msg
-handleActionInNormalMode (Cursor cursorLine cursorChar) action =
+executeAction : Cursor -> Action -> List Msg
+executeAction (Cursor cursorLine cursorChar) action =
     case action of
         ActionChange Action_diw ->
-            [ ApplyCommandOnTextObject DeleteCommand InWord, ActionExecuted ]
+            [ ApplyCommandOnTextObject DeleteCommand InWord ]
 
         ActionChange Action_ciw ->
-            [ ApplyCommandOnTextObject ChangeCommand InWord, ActionExecuted ]
+            [ ApplyCommandOnTextObject ChangeCommand InWord ]
 
         ActionMotion Action_yiw ->
-            [ ApplyCommandOnTextObject YankCommand InWord, ActionExecuted ]
+            [ ApplyCommandOnTextObject YankCommand InWord ]
 
         ActionChange Action_dd ->
-            [ YankLine cursorLine, DeleteLine cursorLine, ActionExecuted ]
+            [ YankLine cursorLine, DeleteLine cursorLine ]
 
         ActionMotion Action_yy ->
-            [ YankLine cursorLine, ActionExecuted ]
+            [ YankLine cursorLine ]
 
         ActionMotion Action_gg ->
-            [ MoveCursor FirstLine, MoveCursor FirstWORDinLine, ActionExecuted ]
+            [ MoveCursor FirstLine, MoveCursor FirstWORDinLine ]
 
         ActionChange Action_i ->
             [ SetMode Insert ]

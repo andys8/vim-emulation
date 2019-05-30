@@ -58,13 +58,10 @@ update msg model =
 
                     else
                         handleNormalMode
-
-                ( newModel, msgs ) =
-                    { model | keyStrokes = key :: model.keyStrokes }
-                        |> handleKey key
             in
-            ( newModel, Cmd.none )
-                |> sequence update msgs
+            model
+                |> handleKey key
+                |> applyMsgs
 
         SetMode Normal ->
             let
@@ -433,10 +430,14 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
 
 
 handleNormalMode : String -> Model -> ( Model, List Msg )
-handleNormalMode _ ({ cursor, keyStrokes } as model) =
-    ( model
+handleNormalMode key model =
+    let
+        keyStrokes =
+            key :: model.keyStrokes
+    in
+    ( { model | keyStrokes = keyStrokes }
     , Action.fromKeyStrokes keyStrokes
-        |> Maybe.map (handleActionInNormalMode cursor)
+        |> Maybe.map (handleActionInNormalMode model.cursor)
         |> Maybe.withDefault []
     )
 
@@ -591,3 +592,9 @@ ifThenElse pred then_ else_ =
 
     else
         else_
+
+
+applyMsgs : ( Model, List Msg ) -> ( Model, Cmd Msg )
+applyMsgs ( model, msgs ) =
+    ( model, Cmd.none )
+        |> sequence update msgs

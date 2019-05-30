@@ -99,6 +99,8 @@ update msg model =
 
         RepeatLastChangeAction ->
             let
+                -- TODO: E.g. 'ciw' has to include the actual change in insert mode
+                -- TODO: Repeat changes done in insert mode
                 isLastChangeAction action =
                     isChangeAction action && action /= ActionChange Action_Dot
 

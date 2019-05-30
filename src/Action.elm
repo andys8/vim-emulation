@@ -66,6 +66,7 @@ fromKeyStrokes keyStrokes =
         "g" :: "g" :: _ ->
             Just <| ActionMotion Action_gg
 
+        -- Ignoring to prevent insert mode instead e.g. "diw"
         "i" :: "d" :: _ ->
             Nothing
 

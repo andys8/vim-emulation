@@ -2,6 +2,7 @@ module MainTest exposing (all)
 
 import Buffer exposing (..)
 import Expect exposing (Expectation)
+import Fuzzers
 import List
 import Main exposing (update)
 import Model exposing (Buffer(..), Cursor(..), Mode(..), Model, Msg(..), initModel)
@@ -342,19 +343,33 @@ all =
                     \_ ->
                         initWithKeySequence [ "c", "i" ]
                             |> expectMode Normal
-                , describe "Repeat with dot (.)"
-                    [ test "Delete line" <|
-                        \_ ->
-                            initModelWithBuffer "a\nb\nc"
-                                |> keySequence [ "d", "d", "." ]
-                                |> expectBuffer "c"
-                    , test "Paste line" <|
-                        \_ ->
-                            initModelWithBuffer "a"
-                                |> keySequence [ "y", "y", "p", "." ]
-                                |> expectBuffer "a\na\na"
-                    , todo "Test that compares . with multiple times the same action"
-                    ]
+                ]
+            , describe "Repeat with dot (.)"
+                [ test "Delete line" <|
+                    \_ ->
+                        initModelWithBuffer "a\nb\nc"
+                            |> keySequence [ "d", "d", "." ]
+                            |> expectBuffer "c"
+                , test "Paste line" <|
+                    \_ ->
+                        initModelWithBuffer "a"
+                            |> keySequence [ "y", "y", "p", "." ]
+                            |> expectBuffer "a\na\na"
+                , fuzz Fuzzers.buffer "Delete line with fuzzed buffer" <|
+                    \buffer ->
+                        expectEqualBuffers buffer
+                            (keySequence [ "d", "d", "d", "d" ])
+                            (keySequence [ "d", "d", "." ])
+                , fuzz Fuzzers.buffer "Pasting line somewhere" <|
+                    \buffer ->
+                        expectEqualBuffers buffer
+                            (keySequence [ "y", "y", "p", "j", "p" ])
+                            (keySequence [ "y", "y", "p", "j", "." ])
+                , fuzz Fuzzers.buffer "3x delete in word" <|
+                    \buffer ->
+                        expectEqualBuffers buffer
+                            (keySequence [ "d", "i", "w", "d", "i", "w", "d", "i", "w" ])
+                            (keySequence [ "d", "i", "w", ".", "." ])
                 ]
             ]
         ]
@@ -405,3 +420,21 @@ expectCursorAt char ( model, _ ) =
             splitBufferContent (cursorToPosition cursor) model.buffer
     in
     Expect.equal char middle
+
+
+expectEqualBuffers :
+    String
+    -> (( Model, Cmd Msg ) -> ( Model, Cmd Msg ))
+    -> (( Model, Cmd Msg ) -> ( Model, Cmd Msg ))
+    -> Expectation
+expectEqualBuffers buffer f1 f2 =
+    let
+        model =
+            initModelWithBuffer buffer
+
+        toBuffer =
+            Tuple.first >> .buffer
+    in
+    Expect.equal
+        (model |> f1 |> toBuffer)
+        (model |> f2 |> toBuffer)

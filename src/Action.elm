@@ -1,18 +1,15 @@
-module Action exposing (fromKeyStrokes)
+module Action exposing (Action(..), Change(..), Motion(..), fromKeyStrokes)
 
 
-type ParsedKeys
-    = Action Action_
-    | Movement Movement_
+type Action
+    = ActionChange Change
+    | ActionMotion Motion
 
 
-type Action_
+type Change
     = Action_diw
     | Action_ciw
-    | Action_yiw
     | Action_dd
-    | Action_yy
-    | Action_gg
     | Action_i
     | Action_I
     | Action_S
@@ -25,9 +22,19 @@ type Action_
     | Action_Delete
     | Action_x
     | Action_X
+
+
+type Motion
+    = Action_h
+    | Action_j
+    | Action_k
+    | Action_l
+    | Action_yy
     | Action_0
     | Action_Graph
+    | Action_gg
     | Action_G
+    | Action_yiw
     | Action_w
     | Action_W
     | Action_b
@@ -37,125 +44,113 @@ type Action_
     | Action_Dollar
 
 
-
--- TODO: More actions are actually movements
-
-
-type Movement_
-    = Movement_h
-    | Movement_j
-    | Movement_k
-    | Movement_l
-
-
-fromKeyStrokes : List String -> Maybe ParsedKeys
+fromKeyStrokes : List String -> Maybe Action
 fromKeyStrokes keyStrokes =
     case keyStrokes of
         "w" :: "i" :: "d" :: _ ->
-            Just <| Action Action_diw
+            Just <| ActionChange Action_diw
 
         "w" :: "i" :: "c" :: _ ->
-            Just <| Action Action_ciw
+            Just <| ActionChange Action_ciw
 
         "w" :: "i" :: "y" :: _ ->
-            Just <| Action Action_yiw
+            Just <| ActionMotion Action_yiw
 
         "d" :: "d" :: _ ->
-            Just <| Action Action_dd
+            Just <| ActionChange Action_dd
 
         "y" :: "y" :: _ ->
-            Just <| Action Action_yy
+            Just <| ActionMotion Action_yy
 
         "g" :: "g" :: _ ->
-            Just <| Action Action_gg
+            Just <| ActionMotion Action_gg
 
-        "i" :: keys ->
-            -- Ignore when CommandOnTextObject (e.g. "ciw") is the goal
-            if List.member (List.head keys |> Maybe.withDefault "") [ "y", "c", "d" ] then
-                Nothing
+        "i" :: "d" :: _ ->
+            Nothing
 
-            else
-                Just <| Action Action_i
+        "i" :: "c" :: _ ->
+            Nothing
+
+        "i" :: "y" :: _ ->
+            Nothing
+
+        "i" :: _ ->
+            Just <| ActionChange Action_i
 
         "I" :: _ ->
-            Just <| Action Action_I
+            Just <| ActionChange Action_I
 
         "S" :: _ ->
-            Just <| Action Action_S
+            Just <| ActionChange Action_S
 
         "a" :: _ ->
-            Just <| Action Action_a
+            Just <| ActionChange Action_a
 
         "A" :: _ ->
-            Just <| Action Action_A
+            Just <| ActionChange Action_A
 
         "p" :: _ ->
-            Just <| Action Action_p
+            Just <| ActionChange Action_p
 
         "P" :: _ ->
-            Just <| Action Action_P
+            Just <| ActionChange Action_P
 
         "o" :: _ ->
-            Just <| Action Action_o
+            Just <| ActionChange Action_o
 
         "O" :: _ ->
-            Just <| Action Action_O
+            Just <| ActionChange Action_O
 
         "Delete" :: _ ->
-            Just <| Action Action_Delete
+            Just <| ActionChange Action_Delete
 
         "x" :: _ ->
-            Just <| Action Action_x
+            Just <| ActionChange Action_x
 
         "X" :: _ ->
-            Just <| Action Action_X
+            Just <| ActionChange Action_X
 
-        -- TODO
-        -- ifThenElse
-        --     (cursorChar > 0)
-        --     [ DeleteChar cursorLine (cursorChar - 1), MoveCursor (Left 1) ]
-        --     []
         "0" :: _ ->
-            Just <| Action Action_0
+            Just <| ActionMotion Action_0
 
         "^" :: _ ->
-            Just <| Action Action_Graph
+            Just <| ActionMotion Action_Graph
 
         "G" :: _ ->
-            Just <| Action Action_G
+            Just <| ActionMotion Action_G
 
         "w" :: _ ->
-            Just <| Action Action_w
+            Just <| ActionMotion Action_w
 
         "W" :: _ ->
-            Just <| Action Action_W
+            Just <| ActionMotion Action_W
 
         "b" :: _ ->
-            Just <| Action Action_b
+            Just <| ActionMotion Action_b
 
         "B" :: _ ->
-            Just <| Action Action_B
+            Just <| ActionMotion Action_B
 
         "e" :: _ ->
-            Just <| Action Action_e
+            Just <| ActionMotion Action_e
 
         "E" :: _ ->
-            Just <| Action Action_E
+            Just <| ActionMotion Action_E
 
         "$" :: _ ->
-            Just <| Action Action_Dollar
+            Just <| ActionMotion Action_Dollar
 
         "h" :: _ ->
-            Just <| Movement Movement_h
+            Just <| ActionMotion Action_h
 
         "j" :: _ ->
-            Just <| Movement Movement_j
+            Just <| ActionMotion Action_j
 
         "k" :: _ ->
-            Just <| Movement Movement_k
+            Just <| ActionMotion Action_k
 
         "l" :: _ ->
-            Just <| Movement Movement_l
+            Just <| ActionMotion Action_l
 
         _ ->
             Nothing

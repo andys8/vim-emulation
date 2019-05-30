@@ -1,5 +1,6 @@
 module Main exposing (main, update)
 
+import Action exposing (Action(..), Change(..), Motion(..))
 import Browser
 import Browser.Dom
 import Buffer exposing (..)
@@ -439,119 +440,115 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
 
 handleNormalMode : String -> Model -> ( Model, List Msg )
 handleNormalMode _ ({ cursor, keyStrokes } as model) =
-    let
-        (Cursor cursorLine cursorChar) =
-            cursor
+    ( model
+    , Action.fromKeyStrokes keyStrokes
+        |> Maybe.map (handleActionInNormalMode cursor)
+        |> Maybe.withDefault []
+    )
 
-        msgs =
-            case keyStrokes of
-                "w" :: "i" :: "d" :: _ ->
-                    [ ApplyCommandOnTextObject DeleteCommand InWord, ActionExecuted ]
 
-                "w" :: "i" :: "c" :: _ ->
-                    [ ApplyCommandOnTextObject ChangeCommand InWord, ActionExecuted ]
+handleActionInNormalMode : Cursor -> Action -> List Msg
+handleActionInNormalMode (Cursor cursorLine cursorChar) action =
+    case action of
+        ActionChange Action_diw ->
+            [ ApplyCommandOnTextObject DeleteCommand InWord, ActionExecuted ]
 
-                "w" :: "i" :: "y" :: _ ->
-                    [ ApplyCommandOnTextObject YankCommand InWord, ActionExecuted ]
+        ActionChange Action_ciw ->
+            [ ApplyCommandOnTextObject ChangeCommand InWord, ActionExecuted ]
 
-                "d" :: "d" :: _ ->
-                    [ YankLine cursorLine, DeleteLine cursorLine, ActionExecuted ]
+        ActionMotion Action_yiw ->
+            [ ApplyCommandOnTextObject YankCommand InWord, ActionExecuted ]
 
-                "y" :: "y" :: _ ->
-                    [ YankLine cursorLine, ActionExecuted ]
+        ActionChange Action_dd ->
+            [ YankLine cursorLine, DeleteLine cursorLine, ActionExecuted ]
 
-                "g" :: "g" :: _ ->
-                    [ MoveCursor FirstLine, MoveCursor FirstWORDinLine, ActionExecuted ]
+        ActionMotion Action_yy ->
+            [ YankLine cursorLine, ActionExecuted ]
 
-                "i" :: keys ->
-                    -- Ignore when CommandOnTextObject (e.g. "ciw") is the goal
-                    ifThenElse
-                        (List.member (List.head keys |> Maybe.withDefault "") [ "y", "c", "d" ])
-                        []
-                        [ SetMode Insert ]
+        ActionMotion Action_gg ->
+            [ MoveCursor FirstLine, MoveCursor FirstWORDinLine, ActionExecuted ]
 
-                "I" :: _ ->
-                    [ SetMode Insert, MoveCursor LineBegin ]
+        ActionChange Action_i ->
+            [ SetMode Insert ]
 
-                "S" :: _ ->
-                    [ ClearLine cursorLine, SetMode Insert ]
+        ActionChange Action_I ->
+            [ SetMode Insert, MoveCursor LineBegin ]
 
-                "a" :: _ ->
-                    [ SetMode Insert, MoveCursor (Right 1) ]
+        ActionChange Action_S ->
+            [ ClearLine cursorLine, SetMode Insert ]
 
-                "A" :: _ ->
-                    [ SetMode Insert, MoveCursor LineEnd ]
+        ActionChange Action_a ->
+            [ SetMode Insert, MoveCursor (Right 1) ]
 
-                "p" :: _ ->
-                    [ PasteAfter ]
+        ActionChange Action_A ->
+            [ SetMode Insert, MoveCursor LineEnd ]
 
-                "P" :: _ ->
-                    [ PasteBefore ]
+        ActionChange Action_p ->
+            [ PasteAfter ]
 
-                "o" :: _ ->
-                    [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]
+        ActionChange Action_P ->
+            [ PasteBefore ]
 
-                "O" :: _ ->
-                    [ InsertNewLine cursorLine, SetMode Insert, MoveCursor LineBegin ]
+        ActionChange Action_o ->
+            [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]
 
-                "Delete" :: _ ->
-                    [ DeleteChar cursorLine cursorChar ]
+        ActionChange Action_O ->
+            [ InsertNewLine cursorLine, SetMode Insert, MoveCursor LineBegin ]
 
-                "x" :: _ ->
-                    [ DeleteChar cursorLine cursorChar ]
+        ActionChange Action_Delete ->
+            [ DeleteChar cursorLine cursorChar ]
 
-                "X" :: _ ->
-                    ifThenElse
-                        (cursorChar > 0)
-                        [ DeleteChar cursorLine (cursorChar - 1), MoveCursor (Left 1) ]
-                        []
+        ActionChange Action_x ->
+            [ DeleteChar cursorLine cursorChar ]
 
-                "0" :: _ ->
-                    [ MoveCursor LineBegin ]
+        ActionChange Action_X ->
+            if cursorChar > 0 then
+                [ DeleteChar cursorLine (cursorChar - 1), MoveCursor (Left 1) ]
 
-                "^" :: _ ->
-                    [ MoveCursor FirstWORDinLine ]
+            else
+                []
 
-                "G" :: _ ->
-                    [ MoveCursor LastLine, MoveCursor FirstWORDinLine ]
+        ActionMotion Action_0 ->
+            [ MoveCursor LineBegin ]
 
-                "w" :: _ ->
-                    [ MoveCursor NextWord ]
+        ActionMotion Action_Graph ->
+            [ MoveCursor FirstWORDinLine ]
 
-                "W" :: _ ->
-                    [ MoveCursor NextWORD ]
+        ActionMotion Action_G ->
+            [ MoveCursor LastLine, MoveCursor FirstWORDinLine ]
 
-                "b" :: _ ->
-                    [ MoveCursor PrevWord ]
+        ActionMotion Action_w ->
+            [ MoveCursor NextWord ]
 
-                "B" :: _ ->
-                    [ MoveCursor PrevWORD ]
+        ActionMotion Action_W ->
+            [ MoveCursor NextWORD ]
 
-                "e" :: _ ->
-                    [ MoveCursor NextWordEnd ]
+        ActionMotion Action_b ->
+            [ MoveCursor PrevWord ]
 
-                "E" :: _ ->
-                    [ MoveCursor NextWORDEnd ]
+        ActionMotion Action_B ->
+            [ MoveCursor PrevWORD ]
 
-                "$" :: _ ->
-                    [ MoveCursor LineEnd ]
+        ActionMotion Action_e ->
+            [ MoveCursor NextWordEnd ]
 
-                "h" :: _ ->
-                    [ MoveCursor (Left 1) ]
+        ActionMotion Action_E ->
+            [ MoveCursor NextWORDEnd ]
 
-                "j" :: _ ->
-                    [ MoveCursor Down ]
+        ActionMotion Action_Dollar ->
+            [ MoveCursor LineEnd ]
 
-                "k" :: _ ->
-                    [ MoveCursor Up ]
+        ActionMotion Action_h ->
+            [ MoveCursor (Left 1) ]
 
-                "l" :: _ ->
-                    [ MoveCursor (Right 1) ]
+        ActionMotion Action_j ->
+            [ MoveCursor Down ]
 
-                _ ->
-                    []
-    in
-    ( model, msgs )
+        ActionMotion Action_k ->
+            [ MoveCursor Up ]
+
+        ActionMotion Action_l ->
+            [ MoveCursor (Right 1) ]
 
 
 

@@ -176,6 +176,14 @@ all =
                             [ expectBuffer "ade"
                             , expectCursorAt "d"
                             ]
+            , test "Delete with X" <|
+                \_ ->
+                    initModelWithBuffer "abc"
+                        |> keySequence [ "l", "X", "X" ]
+                        |> Expect.all
+                            [ expectBuffer "bc"
+                            , expectCursorAt "b"
+                            ]
             , test "S deletes line, goes in insert mode in first char" <|
                 \_ ->
                     initModelWithBuffer "abcde"

@@ -1,4 +1,4 @@
-module Main exposing (main, update)
+port module Main exposing (main, update)
 
 import Action exposing (Action(..), ActionChange(..), ActionNoChange(..), isChangeAction)
 import Browser
@@ -25,6 +25,9 @@ import Platform.Sub as Sub
 import Task
 import Update.Extra exposing (sequence)
 import View exposing (viewDocument)
+
+
+port quitVim : () -> Cmd msg
 
 
 main : Program () Model Msg
@@ -116,6 +119,17 @@ update msg model =
             in
             ( model, Cmd.none )
                 |> sequence update msgs
+
+        CommandLineEntered text ->
+            if
+                List.member
+                    text
+                    [ "q", "qa", "q!", "wq", "x", "x!" ]
+            then
+                ( model, quitVim () )
+
+            else
+                ( model, Cmd.none )
 
         YankLine lineNumber ->
             let
@@ -591,16 +605,16 @@ handleCommandMode key model =
     in
     case key of
         "Enter" ->
-            -- TODO: Implement handling some texts
-            ( { model | commandLine = "" }, [ SetMode Normal ] )
+            ( { model | commandLine = "" }
+            , [ SetMode Normal, CommandLineEntered model.commandLine ]
+            )
 
         "Backspace" ->
-            case model.commandLine of
-                "" ->
-                    ( model, [ SetMode Normal ] )
+            if String.isEmpty model.commandLine then
+                ( model, [ SetMode Normal ] )
 
-                cl ->
-                    ( { model | commandLine = String.dropRight 1 cl }, [] )
+            else
+                ( { model | commandLine = String.dropRight 1 model.commandLine }, [] )
 
         "Escape" ->
             ( { model | commandLine = "" }, [ SetMode Normal ] )

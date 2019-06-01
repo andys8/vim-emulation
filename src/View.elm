@@ -58,10 +58,10 @@ viewBufferNames =
         , lineHeight
         , Background.color colors.bufferNamesLineBg
         ]
-        [ el [ paddingXY 10 4, Background.color colors.bufferNameBg ] (text "[No Name]")
+        [ el [ paddingXY 10 yPadding, Background.color colors.bufferNameBg ] (text "[No Name]")
         , el [ alignLeft ] <| viewArrow ArrowRight colors.bufferNameBg
         , el [ alignRight ] <| viewArrow ArrowLeft colors.bufferNameRightBg
-        , el [ paddingXY 10 4, Font.color colors.white, Background.color colors.bufferNameRightBg, alignRight ] (text "buffers")
+        , el [ paddingXY 10 yPadding, Font.color colors.white, Background.color colors.bufferNameRightBg, alignRight ] (text "buffers")
         ]
 
 
@@ -74,8 +74,8 @@ viewBuffer { cursor, buffer, mode } =
         lineNumbers =
             lines
                 |> List.indexedMap (\a _ -> a)
-                |> List.map ((+) 1 >> String.fromInt >> text >> el [ width fill ])
-                |> column [ Font.alignRight, paddingXY 10 0, alignTop, Font.color colors.lineFont ]
+                |> List.map ((+) 1 >> String.fromInt >> text >> el [ width fill, lineHeight, paddingXY 10 yPadding ])
+                |> column [ Font.alignRight, alignTop, Font.color colors.lineFont ]
 
         bufferLines =
             lines
@@ -91,7 +91,7 @@ viewBuffer { cursor, buffer, mode } =
 
 viewBufferLine : Mode -> Cursor -> Int -> String -> Element msg
 viewBufferLine mode cursor lineNumber lineContent =
-    row [ height (minimum fontSize fill) ] <|
+    row [ lineHeight ] <|
         if lineNumber == cursorLine_ cursor && mode /= Command then
             let
                 (Cursor _ normalizedCursorChar) =
@@ -108,7 +108,7 @@ viewBufferLine mode cursor lineNumber lineContent =
 
 viewCursor : String -> Element msg
 viewCursor charUnderCursor =
-    el [ Background.color colors.bufferFont, Font.color colors.bufferBg ] <|
+    el [ Background.color colors.bufferFont, Font.color colors.bufferBg, paddingXY 0 yPadding, lineHeight ] <|
         if String.isEmpty charUnderCursor then
             text " "
 
@@ -142,12 +142,12 @@ viewAirline { mode, cursor, buffer } =
     row
         [ alignBottom, width fill, lineHeight, Background.color colors.airLineBg ]
         [ el
-            [ Background.color modeBackgroundColor, paddingXY 10 4, Font.bold ]
+            [ Background.color modeBackgroundColor, paddingXY 10 yPadding, Font.bold ]
             (text (modeToString mode))
         , el [ alignLeft ] <| viewArrow ArrowRight modeBackgroundColor
         , el [ alignRight ] <| viewArrow ArrowLeft modeBackgroundColor
         , row
-            [ Background.color modeBackgroundColor, paddingXY 10 4, alignRight, spacing 10 ]
+            [ Background.color modeBackgroundColor, paddingXY 10 yPadding, alignRight, spacing 10 ]
             [ el [ alignRight, Font.alignRight, width (shrink |> minimum 80) ] <| text linesPercent
             , el [ alignRight, Font.alignRight, width (shrink |> minimum 80), Font.bold ] <| text linesCount
             ]
@@ -169,7 +169,7 @@ viewCommandLine { mode, commandLine } =
     in
     row
         [ alignBottom
-        , padding 4
+        , padding yPadding
         , Background.color colors.bufferBg
         , Font.color colors.bufferFont
         , lineHeight
@@ -265,6 +265,11 @@ fontSize =
     20
 
 
+yPadding : Int
+yPadding =
+    2
+
+
 lineHeight : Attribute msg
 lineHeight =
-    height (maximum 26 fill)
+    height <| px <| fontSize + 2 * yPadding

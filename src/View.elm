@@ -75,7 +75,7 @@ viewBuffer { cursor, buffer, mode } =
             lines
                 |> List.indexedMap (\a _ -> a)
                 |> List.map ((+) 1 >> String.fromInt >> text >> el [ width fill, lineHeight, paddingXY 10 yPadding ])
-                |> column [ Font.alignRight, alignTop, Font.color colors.lineFont ]
+                |> column [ Font.alignRight, alignTop, Font.color colors.lineNumberFont ]
 
         bufferLines =
             lines
@@ -140,7 +140,12 @@ viewAirline { mode, cursor, buffer } =
             String.fromInt currentLine ++ "/" ++ String.fromInt totalLines
     in
     row
-        [ alignBottom, width fill, lineHeight, Background.color colors.airLineBg ]
+        [ alignBottom
+        , width fill
+        , lineHeight
+        , Font.color colors.black
+        , Background.color colors.airLineBg
+        ]
         [ el
             [ Background.color modeBackgroundColor, paddingXY 10 yPadding, Font.bold ]
             (text (modeToString mode))
@@ -233,12 +238,13 @@ type ArrowDirection
 
 type alias Colors =
     { white : Color
+    , black : Color
     , bufferNamesLineBg : Color
     , bufferNameBg : Color
     , bufferNameRightBg : Color
     , bufferBg : Color
     , bufferFont : Color
-    , lineFont : Color
+    , lineNumberFont : Color
     , airLineBg : Color
     , airLineNormalModeBg : Color
     , airLineInsertModeBg : Color
@@ -248,12 +254,13 @@ type alias Colors =
 colors : Colors
 colors =
     { white = rgb255 255 255 255
+    , black = rgb255 0 0 0
     , bufferNamesLineBg = rgb255 48 48 48
     , bufferNameBg = rgb255 175 135 255
     , bufferNameRightBg = rgb255 95 95 175
-    , bufferBg = rgb255 38 38 38
-    , bufferFont = rgb255 255 215 175
-    , lineFont = rgb255 118 118 118
+    , bufferBg = rgb255 40 42 54
+    , bufferFont = rgb255 248 248 242
+    , lineNumberFont = rgb255 95 95 135
     , airLineBg = rgb255 95 95 95
     , airLineNormalModeBg = rgb255 175 135 255
     , airLineInsertModeBg = rgb255 95 255 135

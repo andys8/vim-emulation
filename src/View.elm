@@ -110,7 +110,7 @@ viewBufferLineNumber : Cursor -> Int -> Element msg
 viewBufferLineNumber cursor lineDifference =
     let
         attributes =
-            [ width fill, lineHeight, width (minimum 40 fill) ]
+            [ width fill, lineHeight, width (minimum 48 fill) ]
     in
     case lineDifference of
         0 ->

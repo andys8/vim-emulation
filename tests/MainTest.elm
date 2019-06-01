@@ -355,6 +355,11 @@ all =
                         initModelWithBuffer "a"
                             |> keySequence [ "y", "y", "p", "." ]
                             |> expectBuffer "a\na\na"
+                , test "Dot repeats paste, but content can change" <|
+                    \_ ->
+                        initModelWithBuffer "a\nb"
+                            |> keySequence [ "y", "y", "p", "j", "y", "y", "." ]
+                            |> expectBuffer "a\na\nb\nb"
                 , fuzz Fuzzers.buffer "Delete line with fuzzed buffer" <|
                     \buffer ->
                         expectEqualBuffers buffer

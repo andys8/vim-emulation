@@ -182,6 +182,21 @@ modeToString mode =
 -- Constants
 
 
+type alias Colors =
+    { white : Color
+    , bufferNamesLineBg : Color
+    , bufferNameBg : Color
+    , bufferNameRightBg : Color
+    , bufferBg : Color
+    , bufferFont : Color
+    , lineFont : Color
+    , airLineBg : Color
+    , airLineNormalModeBg : Color
+    , airLineInsertModeBg : Color
+    }
+
+
+colors : Colors
 colors =
     { white = rgb255 255 255 255
     , bufferNamesLineBg = rgb255 48 48 48

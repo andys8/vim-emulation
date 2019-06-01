@@ -10,6 +10,8 @@ import Html.Attributes exposing (id, tabindex)
 import Html.Events exposing (preventDefaultOn)
 import Json.Decode as Decode
 import Model exposing (Cursor(..), Mode(..), Model, Msg(..))
+import Svg
+import Svg.Attributes
 
 
 onKeyDown : Html.Attribute Msg
@@ -51,8 +53,14 @@ view model =
 
 viewBufferNames : Element msg
 viewBufferNames =
-    row [ width fill, Background.color colors.bufferNamesLineBg ]
+    row
+        [ width fill
+        , lineHeight
+        , Background.color colors.bufferNamesLineBg
+        ]
         [ el [ paddingXY 10 4, Background.color colors.bufferNameBg ] (text "[No Name]")
+        , el [ alignLeft ] <| viewArrow ArrowRight colors.bufferNameBg
+        , el [ alignRight ] <| viewArrow ArrowLeft colors.bufferNameRightBg
         , el [ paddingXY 10 4, Font.color colors.white, Background.color colors.bufferNameRightBg, alignRight ] (text "buffers")
         ]
 
@@ -132,10 +140,12 @@ viewAirline { mode, cursor, buffer } =
             String.fromInt currentLine ++ "/" ++ String.fromInt totalLines
     in
     row
-        [ alignBottom, width fill, Background.color colors.airLineBg ]
+        [ alignBottom, width fill, lineHeight, Background.color colors.airLineBg ]
         [ el
             [ Background.color modeBackgroundColor, paddingXY 10 4, Font.bold ]
             (text (modeToString mode))
+        , el [ alignLeft ] <| viewArrow ArrowRight modeBackgroundColor
+        , el [ alignRight ] <| viewArrow ArrowLeft modeBackgroundColor
         , row
             [ Background.color modeBackgroundColor, paddingXY 10 4, alignRight, spacing 10 ]
             [ el [ alignRight, Font.alignRight, width (shrink |> minimum 80) ] <| text linesPercent
@@ -162,7 +172,7 @@ viewCommandLine { mode, commandLine } =
         , padding 4
         , Background.color colors.bufferBg
         , Font.color colors.bufferFont
-        , height (minimum fontSize fill)
+        , lineHeight
         , width fill
         ]
         content
@@ -176,6 +186,45 @@ modeToString mode =
 
         _ ->
             "Normal"
+
+
+viewArrow : ArrowDirection -> Color -> Element msg
+viewArrow direction color =
+    let
+        points =
+            case direction of
+                ArrowRight ->
+                    [ ( 0, 0 ), ( 10, 5 ), ( 0, 10 ) ]
+
+                ArrowLeft ->
+                    [ ( 10, 0 ), ( 0, 5 ), ( 10, 10 ) ]
+
+        pointsToString =
+            List.map (\( x, y ) -> String.fromInt x ++ "," ++ String.fromInt y)
+                >> String.join " "
+
+        svg =
+            Svg.svg
+                [ Svg.Attributes.viewBox "0 0 10 10"
+                , Svg.Attributes.height "100%"
+                , Svg.Attributes.preserveAspectRatio "none"
+                ]
+                [ Svg.polygon
+                    [ Svg.Attributes.fill "currentColor"
+                    , Svg.Attributes.stroke "none"
+                    , Svg.Attributes.points (pointsToString points)
+                    ]
+                    []
+                ]
+    in
+    el
+        [ width (px 12), lineHeight, Font.color color ]
+        (html svg)
+
+
+type ArrowDirection
+    = ArrowRight
+    | ArrowLeft
 
 
 
@@ -214,3 +263,8 @@ colors =
 fontSize : Int
 fontSize =
     20
+
+
+lineHeight : Attribute msg
+lineHeight =
+    height (maximum 26 fill)

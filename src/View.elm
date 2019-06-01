@@ -71,10 +71,15 @@ viewBuffer { cursor, buffer, mode } =
         lines =
             bufferToLines buffer
 
+        viewLineNumber n =
+            el
+                [ width fill, lineHeight, paddingXY 10 yPadding, width (minimum 40 fill) ]
+                (text (String.fromInt n))
+
         lineNumbers =
             lines
-                |> List.indexedMap (\a _ -> a)
-                |> List.map ((+) 1 >> String.fromInt >> text >> el [ width fill, lineHeight, paddingXY 10 yPadding ])
+                |> List.indexedMap (\a _ -> a + 1)
+                |> List.map viewLineNumber
                 |> column [ Font.alignRight, alignTop, Font.color colors.lineNumberFont ]
 
         bufferLines =

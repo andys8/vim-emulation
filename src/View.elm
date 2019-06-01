@@ -71,16 +71,11 @@ viewBuffer { cursor, buffer, mode } =
         lines =
             bufferToLines buffer
 
-        viewLineNumber n =
-            el
-                [ width fill, lineHeight, paddingXY 10 yPadding, width (minimum 40 fill) ]
-                (text (String.fromInt n))
-
         lineNumbers =
             lines
-                |> List.indexedMap (\a _ -> a + 1)
-                |> List.map viewLineNumber
-                |> column [ Font.alignRight, alignTop, Font.color colors.lineNumberFont ]
+                |> List.indexedMap (\index _ -> index - cursorLine_ cursor)
+                |> List.map (viewBufferLineNumber cursor)
+                |> column [ Font.alignRight, alignTop ]
 
         bufferLines =
             lines
@@ -109,6 +104,35 @@ viewBufferLine mode cursor lineNumber lineContent =
 
         else
             [ text lineContent ]
+
+
+viewBufferLineNumber : Cursor -> Int -> Element msg
+viewBufferLineNumber cursor lineDifference =
+    let
+        attributes =
+            [ width fill, lineHeight, width (minimum 40 fill) ]
+    in
+    case lineDifference of
+        0 ->
+            el
+                (attributes
+                    ++ [ paddingXY 0 yPadding
+                       , Background.color colors.black
+                       , Font.alignLeft
+                       , Font.color colors.lineNumberCurrentFont
+                       ]
+                )
+                (text (String.fromInt (cursorLine_ cursor + 1)))
+
+        _ ->
+            el
+                (attributes
+                    ++ [ paddingXY 10 yPadding
+                       , Font.alignRight
+                       , Font.color colors.lineNumberFont
+                       ]
+                )
+                (text (String.fromInt (abs lineDifference)))
 
 
 viewCursor : String -> Element msg
@@ -254,6 +278,7 @@ type alias Colors =
     , bufferBg : Color
     , bufferFont : Color
     , lineNumberFont : Color
+    , lineNumberCurrentFont : Color
     , airLineBg : Color
     , airLineNormalModeBg : Color
     , airLineInsertModeBg : Color
@@ -270,6 +295,7 @@ colors =
     , bufferBg = rgb255 40 42 54
     , bufferFont = rgb255 248 248 242
     , lineNumberFont = rgb255 95 95 135
+    , lineNumberCurrentFont = rgb255 255 255 135
     , airLineBg = rgb255 95 95 95
     , airLineNormalModeBg = rgb255 175 135 255
     , airLineInsertModeBg = rgb255 95 255 135

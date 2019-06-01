@@ -163,14 +163,18 @@ viewCommandLine : Model -> Element msg
 viewCommandLine { mode, commandLine } =
     let
         content =
-            if mode == Command then
-                [ text ":"
-                , text commandLine
-                , viewCursor ""
-                ]
+            case mode of
+                Command ->
+                    [ text ":"
+                    , text commandLine
+                    , viewCursor ""
+                    ]
 
-            else
-                [ text " " ]
+                Insert ->
+                    [ el [ Font.bold ] <| text "-- INSERT --" ]
+
+                Normal ->
+                    [ text " " ]
     in
     row
         [ alignBottom
@@ -187,10 +191,10 @@ modeToString : Mode -> String
 modeToString mode =
     case mode of
         Insert ->
-            "Insert"
+            "INSERT"
 
         _ ->
-            "Normal"
+            "NORMAL"
 
 
 viewArrow : ArrowDirection -> Color -> Element msg

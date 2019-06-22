@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/andys8/vim-emulation#readme",
   "devDependencies": {
-    "create-elm-app": "3.0.7",
+    "create-elm-app": "3.0.8",
     "elm-analyse": "0.16.4",
     "gh-pages": "2.0.1"
   }

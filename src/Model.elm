@@ -56,7 +56,7 @@ type Msg
     | SetMode Mode
     | YankLine Int
     | RepeatLastChangeAction
-    | CommandLineEntered String
+    | ExecuteCmd (Cmd Msg)
 
 
 type CursorDirection

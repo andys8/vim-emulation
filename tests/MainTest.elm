@@ -212,31 +212,43 @@ all =
                             , expectCursor (Cursor 2 0)
                             , expectMode Normal
                             ]
-            , test "2x Backspace over multiple lines in insert mode" <|
-                \_ ->
-                    [ "i", "a", "Enter", "b", "Backspace", "Backspace" ]
-                        |> initWithKeySequence
-                        |> expectBuffer "a"
-            , test "3x Backspace over multiple lines in insert mode" <|
-                \_ ->
-                    [ "i", "a", "Enter", "b", "Backspace", "Backspace", "Backspace" ]
-                        |> initWithKeySequence
-                        |> expectBuffer ""
-            , test "Delete in insert mode" <|
-                \_ ->
-                    initModelWithBuffer "ab"
-                        |> keySequence [ "i", "Delete" ]
-                        |> expectBuffer "b"
-            , test "Delete line end in insert mode" <|
-                \_ ->
-                    initModelWithBuffer "\na"
-                        |> keySequence [ "i", "Delete" ]
-                        |> expectBuffer "a"
-            , test "Delete characters over multiple lines in insert mode" <|
-                \_ ->
-                    initModelWithBuffer "ab\ncd"
-                        |> keySequence [ "i", "Delete", "Delete", "Delete", "Delete" ]
-                        |> expectBuffer "d"
+            , describe "Insert Mode"
+                [ test "2x Backspace over multiple lines" <|
+                    \_ ->
+                        [ "i", "a", "Enter", "b", "Backspace", "Backspace" ]
+                            |> initWithKeySequence
+                            |> expectBuffer "a"
+                , test "3x Backspace over multiple lines" <|
+                    \_ ->
+                        [ "i", "a", "Enter", "b", "Backspace", "Backspace", "Backspace" ]
+                            |> initWithKeySequence
+                            |> expectBuffer ""
+                , test "Delete" <|
+                    \_ ->
+                        initModelWithBuffer "ab"
+                            |> keySequence [ "i", "Delete" ]
+                            |> expectBuffer "b"
+                , test "Delete line end" <|
+                    \_ ->
+                        initModelWithBuffer "\na"
+                            |> keySequence [ "i", "Delete" ]
+                            |> expectBuffer "a"
+                , test "Delete characters over multiple lines" <|
+                    \_ ->
+                        initModelWithBuffer "ab\ncd"
+                            |> keySequence [ "i", "Delete", "Delete", "Delete", "Delete" ]
+                            |> expectBuffer "d"
+                , test "Insert 1 Tab" <|
+                    \_ ->
+                        [ "i", "Tab", "a" ]
+                            |> initWithKeySequence
+                            |> expectBuffer "    a"
+                , test "Insert 2 Tabs" <|
+                    \_ ->
+                        [ "i", "Tab", "Tab", "a" ]
+                            |> initWithKeySequence
+                            |> expectBuffer "        a"
+                ]
             , describe "Delete in word"
                 [ test "single word" <|
                     \_ ->

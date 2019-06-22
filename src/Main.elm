@@ -5,6 +5,7 @@ import Browser
 import Browser.Dom
 import Browser.Navigation as Navigation
 import Buffer exposing (..)
+import Config exposing (config)
 import List.Extra
 import Model
     exposing
@@ -118,17 +119,6 @@ update msg model =
             ( model, Cmd.none )
                 |> sequence update msgs
 
-        CommandLineEntered text ->
-            if
-                List.member
-                    text
-                    [ "q", "qa", "q!", "wq", "x", "x!" ]
-            then
-                ( model, quitVim )
-
-            else
-                ( model, Cmd.none )
-
         YankLine lineNumber ->
             let
                 line =
@@ -138,6 +128,9 @@ update msg model =
                         |> Maybe.withDefault ""
             in
             ( { model | register = RegisterLine line }, Cmd.none )
+
+        ExecuteCmd cmd ->
+            ( model, cmd )
 
         PasteBefore ->
             case model.register of
@@ -455,7 +448,9 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
                         ( before ++ after_, [] )
 
                     "Tab" ->
-                        ( before ++ "  " ++ middle ++ after, [ MoveCursor (Right 2) ] )
+                        ( before ++ String.repeat config.shiftWidth " " ++ middle ++ after
+                        , [ MoveCursor (Right config.shiftWidth) ]
+                        )
 
                     _ ->
                         ( before ++ keyDown ++ middle ++ after, [ MoveCursor (Right 1) ] )
@@ -604,7 +599,7 @@ handleCommandMode key model =
     case key of
         "Enter" ->
             ( { model | commandLine = "" }
-            , [ SetMode Normal, CommandLineEntered model.commandLine ]
+            , SetMode Normal :: handleCommandLineEntered model.commandLine
             )
 
         "Backspace" ->
@@ -623,6 +618,20 @@ handleCommandMode key model =
 
             else
                 ( { model | commandLine = model.commandLine ++ key_ }, [] )
+
+
+handleCommandLineEntered : String -> List Msg
+handleCommandLineEntered text =
+    let
+        command =
+            -- Ignore "!" for now, but has to be implemnted
+            String.replace "!" "" text
+    in
+    if List.member command [ "q", "qa", "wq", "x" ] then
+        [ ExecuteCmd quitVim ]
+
+    else
+        []
 
 
 quitVim : Cmd a

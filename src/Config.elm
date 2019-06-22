@@ -47,3 +47,4 @@ colors =
     , airLineNormalModeBg = rgb255 175 135 255
     , airLineInsertModeBg = rgb255 95 255 135
     }
+

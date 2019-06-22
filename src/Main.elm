@@ -180,6 +180,9 @@ update msg model =
                     ( { model | buffer = Buffer buffer }, Cmd.none )
                         |> sequence update [ MoveCursor <| Right <| String.length register ]
 
+        ClearBuffer ->
+            ( { model | buffer = Buffer "", cursor = Cursor 0 0 }, Cmd.none )
+
         ClearLine lineNumber ->
             let
                 buffer =
@@ -629,6 +632,9 @@ handleCommandLineEntered text =
     in
     if List.member command [ "q", "qa", "wq", "x" ] then
         [ ExecuteCmd quitVim ]
+
+    else if List.member command [ "bd", "bdelete" ] then
+        [ ClearBuffer ]
 
     else
         []

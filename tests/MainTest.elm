@@ -422,6 +422,24 @@ all =
                         [ ":", "a", "A" ]
                             |> initWithKeySequence
                             |> expectCommandLine "aA"
+                , test "bdelete clears buffer" <|
+                    \_ ->
+                        initModelWithBuffer "a\nb"
+                            |> keySequence [ ":", "b", "d", "e", "l", "e", "t", "e", "Enter" ]
+                            |> Expect.all
+                                [ expectCursor (Cursor 0 0)
+                                , expectMode Normal
+                                , expectBuffer ""
+                                ]
+                , test "bd clears buffer" <|
+                    \_ ->
+                        initModelWithBuffer "a\nb"
+                            |> keySequence [ ":", "b", "d", "Enter" ]
+                            |> Expect.all
+                                [ expectCursor (Cursor 0 0)
+                                , expectMode Normal
+                                , expectBuffer ""
+                                ]
                 ]
             ]
         ]

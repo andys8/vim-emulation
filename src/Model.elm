@@ -43,6 +43,7 @@ initModel =
 type Msg
     = NoOp
     | ActionExecuted Action
+    | ClearBuffer
     | ClearLine Int
     | DeleteChar Int Int
     | DeleteLine Int

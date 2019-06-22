@@ -2,6 +2,7 @@ module View exposing (view, viewDocument)
 
 import Browser exposing (Document)
 import Buffer exposing (bufferToLines, cursorInModeLine, cursorLine_, splitLine)
+import Config exposing (Colors, config)
 import Element exposing (..)
 import Element.Background as Background
 import Element.Font as Font
@@ -269,37 +270,9 @@ type ArrowDirection
 -- Constants
 
 
-type alias Colors =
-    { white : Color
-    , black : Color
-    , bufferNamesLineBg : Color
-    , bufferNameBg : Color
-    , bufferNameRightBg : Color
-    , bufferBg : Color
-    , bufferFont : Color
-    , lineNumberFont : Color
-    , lineNumberCurrentFont : Color
-    , airLineBg : Color
-    , airLineNormalModeBg : Color
-    , airLineInsertModeBg : Color
-    }
-
-
 colors : Colors
 colors =
-    { white = rgb255 255 255 255
-    , black = rgb255 0 0 0
-    , bufferNamesLineBg = rgb255 48 48 48
-    , bufferNameBg = rgb255 175 135 255
-    , bufferNameRightBg = rgb255 95 95 175
-    , bufferBg = rgb255 40 42 54
-    , bufferFont = rgb255 248 248 242
-    , lineNumberFont = rgb255 95 95 135
-    , lineNumberCurrentFont = rgb255 255 255 135
-    , airLineBg = rgb255 95 95 95
-    , airLineNormalModeBg = rgb255 175 135 255
-    , airLineInsertModeBg = rgb255 95 255 135
-    }
+    config.colors
 
 
 fontSize : Int

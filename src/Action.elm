@@ -10,9 +10,7 @@ type ActionChange
     = Action_diw
     | Action_ciw
     | Action_dd
-      -- TODO: Better handle duplicates like this
-    | Action_cc
-    | Action_S
+    | Action_cc_or_S
     | Action_i
     | Action_I
     | Action_a
@@ -56,7 +54,6 @@ type ActionNoChange
 -- TODO: s replace character and type
 -- TODO: ~ switch case and advance cursor
 -- TODO: J to join current line with next, without space
--- TODO: cc is the same as S
 
 
 fromKeyStrokes : List String -> Maybe Action
@@ -75,7 +72,7 @@ fromKeyStrokes keyStrokes =
             Just <| ActionChangeType Action_dd
 
         "c" :: "c" :: _ ->
-            Just <| ActionChangeType Action_cc
+            Just <| ActionChangeType Action_cc_or_S
 
         "y" :: "y" :: _ ->
             Just <| ActionNoChangeType Action_yy_or_Y
@@ -115,7 +112,7 @@ fromKeyStrokes keyStrokes =
             Just <| ActionChangeType Action_Dot
 
         "S" :: _ ->
-            Just <| ActionChangeType Action_S
+            Just <| ActionChangeType Action_cc_or_S
 
         "a" :: _ ->
             Just <| ActionChangeType Action_a

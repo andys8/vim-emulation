@@ -203,15 +203,11 @@ all =
                             , expectCursor (Cursor 0 0)
                             , expectMode Insert
                             ]
-            , test "cc deletes line, goes in insert mode to first char" <|
-                \_ ->
-                    initModelWithBuffer "abcde\nb"
-                        |> keySequence [ "l", "c", "c" ]
-                        |> Expect.all
-                            [ expectBuffer "\nb"
-                            , expectCursor (Cursor 0 0)
-                            , expectMode Insert
-                            ]
+            , fuzz2 Fuzzers.buffer Fuzzers.movements "cc and S are synonyms" <|
+                \buffer movements ->
+                    expectEqualBuffers buffer
+                        (keySequence movements >> keySequence [ "c", "c" ])
+                        (keySequence movements >> keySequence [ "S" ])
             , test "S with multiple lines" <|
                 \_ ->
                     initModelWithBuffer "ab\ncd\nef"

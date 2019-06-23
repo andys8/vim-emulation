@@ -524,10 +524,7 @@ executeAction (Cursor cursorLine cursorChar) action =
                 Action_dd ->
                     [ YankLine cursorLine, DeleteLine cursorLine ]
 
-                Action_cc ->
-                    [ ClearLine cursorLine, SetMode Insert ]
-
-                Action_S ->
+                Action_cc_or_S ->
                     [ ClearLine cursorLine, SetMode Insert ]
 
                 Action_i ->

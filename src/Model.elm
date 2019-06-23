@@ -76,6 +76,7 @@ type CursorDirection
     | NextWORDEnd
     | PrevWord
     | PrevWORD
+      -- TODO: PrevWordEnd and PrevWORDEnd missing  (ge, gE)
     | FirstLine
     | LastLine
     | ToLine Int

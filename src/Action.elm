@@ -24,6 +24,7 @@ type ActionChange
     | Action_x
     | Action_X
     | Action_Dot
+    | Action_RightShift
 
 
 type ActionNoChange
@@ -70,6 +71,9 @@ fromKeyStrokes keyStrokes =
 
         "g" :: "g" :: _ ->
             Just <| ActionNoChangeType Action_gg
+
+        ">" :: ">" :: _ ->
+            Just <| ActionChangeType Action_RightShift
 
         -- Ignoring to prevent insert mode instead e.g. "diw"
         "i" :: "d" :: _ ->

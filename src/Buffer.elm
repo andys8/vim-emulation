@@ -40,6 +40,11 @@ type WordPositionType
     | WordEnd
 
 
+
+-- TODO: Think about introducing the concept of a ListCursor Char
+-- See <https://cs-syd.eu/posts/2018-11-28-cursors-text>
+
+
 type alias SplitResult =
     { before : String
     , middle : String

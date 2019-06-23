@@ -98,6 +98,16 @@ update msg model =
             in
             ( { model | buffer = Buffer buffer }, Cmd.none )
 
+        InsertText text ->
+            let
+                { before, middle, after } =
+                    splitBufferContent (cursorToPosition model.cursor) model.buffer
+
+                buffer =
+                    before ++ text ++ middle ++ after
+            in
+            ( { model | buffer = Buffer buffer }, Cmd.none )
+
         ActionExecuted action ->
             ( { model | keyStrokes = [], actions = action :: model.actions }
             , Cmd.none
@@ -504,6 +514,9 @@ executeAction (Cursor cursorLine cursorChar) action =
 
                 Action_Dot ->
                     [ RepeatLastChangeAction ]
+
+                Action_RightShift ->
+                    [ InsertText (String.repeat config.shiftWidth " "), MoveCursor FirstWORDinLine ]
 
                 Action_S ->
                     [ ClearLine cursorLine, SetMode Insert ]

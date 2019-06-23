@@ -49,6 +49,7 @@ type Msg
     | DeleteLine Int
     | ApplyCommandOnTextObject Command TextObject
     | InsertNewLine Int
+    | InsertText String
     | KeyDown String
     | MoveCursor CursorDirection
     | PasteAfter

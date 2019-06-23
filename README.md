@@ -6,27 +6,23 @@ Vim implemented in [Elm](https://elm-lang.org)
 
 ### Basic Movement
 
-- <kbd>h</kbd> <kbd>l</kbd> <kbd>k</kbd> <kbd>j</kbd>	character left, right; line up, down
-- <kbd>b</kbd> <kbd>w</kbd> word left, right
-- <kbd>B</kbd> <kbd>W</kbd> WORD left, right
-- <kbd>e</kbd> end of word right
-- <kbd>E</kbd> end of WORD right
+- <kbd>h</kbd> <kbd>l</kbd> <kbd>k</kbd> <kbd>j</kbd> character left, right; line up, down
+- <kbd>w</kbd>/<kbd>W</kbd> word/WORD right
+- <kbd>b</kbd>/<kbd>B</kbd> word/WORD left
+- <kbd>e</kbd>/<kbd>E</kbd> end of word/WORD right
 - <kbd>0</kbd> beginning of line
 - <kbd>^</kbd> first character of line
 - <kbd>$</kbd> last character of line
 - <kbd>G</kbd> last line
 - <kbd>gg</kbd> first line
 
-### TODO
+### Insertion & replace
 
-<kbd>ge</kbd> end of word right
-<kbd>n%</kbd> percentage n of the file (n must be provided)
-<kbd>%</kbd> match of next brace, bracket, comment
-nH nL	line n from start, bottom of window
-M	middle line of window
-{ }	beginning of previous, next paragraph
-( )	beginning of previous, next sentence
-<kbd>gm</kbd> middle of line
+- <kbd>i</kbd> <kbd>a</kbd>	insert before, after cursor
+- <kbd>I</kbd> <kbd>A</kbd>	insert at beginning, end of line
+- <kbd>o</kbd> <kbd>O</kbd>	open a new line below, above the current line
+- <kbd><<</kbd> <kbd>>></kbd> shift left, right
+- <kbd>ciw</kbd> change text in word
 
 ## Further information
 

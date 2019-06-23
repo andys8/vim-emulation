@@ -49,6 +49,13 @@ type ActionNoChange
     | Action_Colon
 
 
+
+-- TODO: C change to the end of line
+-- TODO: D delete to the end of line
+-- TODO: s replace character and type
+-- TODO: ~ switch case and advance cursor
+
+
 fromKeyStrokes : List String -> Maybe Action
 fromKeyStrokes keyStrokes =
     case keyStrokes of

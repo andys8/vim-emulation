@@ -526,6 +526,9 @@ executeAction (Cursor cursorLine cursorChar) action =
                 Action_cc ->
                     [ ClearLine cursorLine, SetMode Insert ]
 
+                Action_S ->
+                    [ ClearLine cursorLine, SetMode Insert ]
+
                 Action_i ->
                     [ SetMode Insert ]
 
@@ -540,9 +543,6 @@ executeAction (Cursor cursorLine cursorChar) action =
 
                 Action_LeftShift ->
                     [ DeleteTextPartial (Position cursorLine 0) shift, MoveCursor FirstWORDinLine ]
-
-                Action_S ->
-                    [ ClearLine cursorLine, SetMode Insert ]
 
                 Action_a ->
                     [ SetMode Insert, MoveCursor (Right 1) ]
@@ -683,7 +683,7 @@ handleCommandLineEntered text =
                     -- Ignore "!" for now, but has to be implemnted
                     String.replace "!" "" text
             in
-            if List.member command [ "q", "qa", "wq", "x" ] then
+            if List.member command [ "q", "qa", "wq", "x", "quit" ] then
                 [ ExecuteCmd quitVim ]
 
             else if List.member command [ "bd", "bdelete" ] then

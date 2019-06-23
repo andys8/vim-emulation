@@ -10,10 +10,11 @@ type ActionChange
     = Action_diw
     | Action_ciw
     | Action_dd
+      -- TODO: Better handle duplicates like this
     | Action_cc
+    | Action_S
     | Action_i
     | Action_I
-    | Action_S
     | Action_a
     | Action_A
     | Action_p
@@ -54,6 +55,9 @@ type ActionNoChange
 -- TODO: D delete to the end of line
 -- TODO: s replace character and type
 -- TODO: ~ switch case and advance cursor
+-- TODO: J to join current line with next, without space
+-- TODO: Y is the same as yy
+-- TODO: cc is the same as S
 
 
 fromKeyStrokes : List String -> Maybe Action

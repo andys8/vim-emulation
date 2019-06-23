@@ -34,7 +34,7 @@ type ActionNoChange
     | Action_j
     | Action_k
     | Action_l
-    | Action_yy
+    | Action_yy_or_Y
     | Action_0
     | Action_Graph
     | Action_gg
@@ -56,7 +56,6 @@ type ActionNoChange
 -- TODO: s replace character and type
 -- TODO: ~ switch case and advance cursor
 -- TODO: J to join current line with next, without space
--- TODO: Y is the same as yy
 -- TODO: cc is the same as S
 
 
@@ -79,7 +78,7 @@ fromKeyStrokes keyStrokes =
             Just <| ActionChangeType Action_cc
 
         "y" :: "y" :: _ ->
-            Just <| ActionNoChangeType Action_yy
+            Just <| ActionNoChangeType Action_yy_or_Y
 
         "g" :: "g" :: _ ->
             Just <| ActionNoChangeType Action_gg
@@ -99,6 +98,9 @@ fromKeyStrokes keyStrokes =
 
         "i" :: "y" :: _ ->
             Nothing
+
+        "Y" :: _ ->
+            Just <| ActionNoChangeType Action_yy_or_Y
 
         "i" :: _ ->
             Just <| ActionChangeType Action_i

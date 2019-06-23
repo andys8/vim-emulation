@@ -37,7 +37,7 @@
 
 ### Copying
 
-- <kbd>yy</kbd> yank current line
+- <kbd>yy</kbd> <kbd>Y</kbd> yank current line
 - <kbd>yiw</kbd> yank in word
 - <kbd>p</kbd> put register after cursor position
 - <kbd>P</kbd> put register before cursor position

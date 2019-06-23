@@ -581,7 +581,7 @@ executeAction (Cursor cursorLine cursorChar) action =
                 Action_yiw ->
                     [ ApplyCommandOnTextObject YankCommand InWord ]
 
-                Action_yy ->
+                Action_yy_or_Y ->
                     [ YankLine cursorLine ]
 
                 Action_gg ->

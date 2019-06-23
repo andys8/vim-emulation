@@ -73,14 +73,21 @@ all =
                                 , expectCursorAt "a"
                                 ]
                 ]
-            , test "Yank line and paste twice" <|
-                \_ ->
-                    initModelWithBuffer "ab"
-                        |> keySequence [ "y", "y", "p", "p" ]
-                        |> Expect.all
-                            [ expectBuffer "ab\nab\nab"
-                            , expectCursor (Cursor 2 0)
-                            ]
+            , describe "Yank line"
+                [ test "Yank line and paste twice" <|
+                    \_ ->
+                        initModelWithBuffer "ab"
+                            |> keySequence [ "y", "y", "p", "p" ]
+                            |> Expect.all
+                                [ expectBuffer "ab\nab\nab"
+                                , expectCursor (Cursor 2 0)
+                                ]
+                , fuzz Fuzzers.buffer "Y and yy are synonyms" <|
+                    \buffer ->
+                        expectEqualBuffers buffer
+                            (keySequence [ "y", "y", "p", "p" ])
+                            (keySequence [ "Y", "p", "p" ])
+                ]
             , test "word movement with 2x w" <|
                 \_ ->
                     initModelWithBuffer "(asdf) (asdf)"

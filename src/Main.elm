@@ -290,134 +290,135 @@ update msg model =
                     )
 
         MoveCursor direction ->
+            ( { model | cursor = handleMoveCursor model direction }, Cmd.none )
+
+
+handleMoveCursor : Model -> CursorDirection -> Cursor
+handleMoveCursor { cursor, buffer, mode } direction =
+    let
+        (Cursor line char) =
+            cursor
+    in
+    case direction of
+        Up ->
+            ifThenElse
+                (line > 0)
+                (Cursor (line - 1) char)
+                cursor
+
+        Down ->
+            ifThenElse
+                (line < List.length (bufferToLines buffer) - 1)
+                (Cursor (line + 1) char)
+                cursor
+
+        Right n ->
             let
-                (Cursor line char) =
-                    model.cursor
+                adaptToMode =
+                    case mode of
+                        Insert ->
+                            (+) 1
 
-                cursor =
-                    case direction of
-                        Up ->
-                            ifThenElse
-                                (line > 0)
-                                (Cursor (line - 1) char)
-                                model.cursor
+                        _ ->
+                            identity
 
-                        Down ->
-                            ifThenElse
-                                (line < List.length (bufferToLines model.buffer) - 1)
-                                (Cursor (line + 1) char)
-                                model.cursor
-
-                        Right n ->
-                            let
-                                adaptToMode =
-                                    case model.mode of
-                                        Insert ->
-                                            (+) 1
-
-                                        _ ->
-                                            identity
-
-                                maxChar =
-                                    lastCharIndexInLine model.cursor model.buffer
-                                        |> adaptToMode
-                            in
-                            ifThenElse
-                                ((char + n) < maxChar)
-                                (Cursor line (char + n))
-                                (Cursor line maxChar)
-
-                        Left n ->
-                            if char - n >= 0 then
-                                let
-                                    (Cursor line_ char_) =
-                                        cursorInMode model.mode model.buffer model.cursor
-                                in
-                                Cursor line_ (char_ - n)
-
-                            else
-                                cursorMoveLineBegin model.cursor
-
-                        LineBegin ->
-                            Cursor line 0
-
-                        LineEnd ->
-                            let
-                                lastChar =
-                                    lastCharIndexInLine model.cursor model.buffer
-                            in
-                            Cursor line (ifThenElse (model.mode == Insert) (lastChar + 1) lastChar)
-
-                        FirstLine ->
-                            Cursor 0 char
-
-                        LastLine ->
-                            Cursor (bufferToLinesCount model.buffer - 1) char
-
-                        ToLine lineNumber ->
-                            Cursor (clamp 0 (bufferToLinesCount model.buffer - 1) (lineNumber - 1)) char
-
-                        FirstWORDinLine ->
-                            model.buffer
-                                |> currentBufferLine model.cursor
-                                |> lineToWORDs line
-                                |> List.Extra.getAt 0
-                                |> Maybe.map (wORDToPosition WordBegin >> cursorFromPosition)
-                                |> Maybe.withDefault model.cursor
-
-                        NextWord ->
-                            model.buffer
-                                |> bufferToWords
-                                |> List.map (wordToPosition WordBegin)
-                                |> List.Extra.find (isPositionAfterCursor model.cursor)
-                                |> Maybe.map cursorFromPosition
-                                |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
-
-                        NextWordEnd ->
-                            model.buffer
-                                |> bufferToWords
-                                |> rejectEmptyWords
-                                |> List.map (wordToPosition WordEnd)
-                                |> List.Extra.find (isPositionAfterCursor model.cursor)
-                                |> Maybe.map cursorFromPosition
-                                |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
-
-                        NextWORD ->
-                            model.buffer
-                                |> bufferToWORDs
-                                |> List.map (wORDToPosition WordBegin)
-                                |> List.Extra.find (isPositionAfterCursor model.cursor)
-                                |> Maybe.map cursorFromPosition
-                                |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
-
-                        NextWORDEnd ->
-                            model.buffer
-                                |> bufferToWORDs
-                                |> rejectEmptyWORDs
-                                |> List.map (wORDToPosition WordEnd)
-                                |> List.Extra.find (isPositionAfterCursor model.cursor)
-                                |> Maybe.map cursorFromPosition
-                                |> Maybe.withDefault (cursorMoveToEndOfLine model.buffer model.cursor)
-
-                        PrevWord ->
-                            model.buffer
-                                |> bufferToWords
-                                |> List.map (wordToPosition WordBegin)
-                                |> List.filter (isPositionBeforeCursor model.cursor)
-                                |> List.Extra.last
-                                |> Maybe.map cursorFromPosition
-                                |> Maybe.withDefault (Cursor 0 0)
-
-                        PrevWORD ->
-                            model.buffer
-                                |> bufferToWORDs
-                                |> List.map (wORDToPosition WordBegin)
-                                |> List.filter (isPositionBeforeCursor model.cursor)
-                                |> List.Extra.last
-                                |> Maybe.map cursorFromPosition
-                                |> Maybe.withDefault (Cursor 0 0)
+                maxChar =
+                    lastCharIndexInLine cursor buffer |> adaptToMode
             in
-            ( { model | cursor = cursor }, Cmd.none )
+            ifThenElse
+                ((char + n) < maxChar)
+                (Cursor line (char + n))
+                (Cursor line maxChar)
+
+        Left n ->
+            if char - n >= 0 then
+                let
+                    (Cursor line_ char_) =
+                        cursorInMode mode buffer cursor
+                in
+                Cursor line_ (char_ - n)
+
+            else
+                cursorMoveLineBegin cursor
+
+        LineBegin ->
+            Cursor line 0
+
+        LineEnd ->
+            let
+                lastChar =
+                    lastCharIndexInLine cursor buffer
+            in
+            Cursor line (ifThenElse (mode == Insert) (lastChar + 1) lastChar)
+
+        FirstLine ->
+            Cursor 0 char
+
+        LastLine ->
+            Cursor (bufferToLinesCount buffer - 1) char
+
+        ToLine lineNumber ->
+            Cursor (clamp 0 (bufferToLinesCount buffer - 1) (lineNumber - 1)) char
+
+        FirstWORDinLine ->
+            buffer
+                |> currentBufferLine cursor
+                |> lineToWORDs line
+                |> List.Extra.getAt 0
+                |> Maybe.map (wORDToPosition WordBegin >> cursorFromPosition)
+                |> Maybe.withDefault cursor
+
+        NextWord ->
+            buffer
+                |> bufferToWords
+                |> List.map (wordToPosition WordBegin)
+                |> List.Extra.find (isPositionAfterCursor cursor)
+                |> Maybe.map cursorFromPosition
+                |> Maybe.withDefault (cursorMoveToEndOfLine buffer cursor)
+
+        NextWordEnd ->
+            buffer
+                |> bufferToWords
+                |> rejectEmptyWords
+                |> List.map (wordToPosition WordEnd)
+                |> List.Extra.find (isPositionAfterCursor cursor)
+                |> Maybe.map cursorFromPosition
+                |> Maybe.withDefault (cursorMoveToEndOfLine buffer cursor)
+
+        NextWORD ->
+            buffer
+                |> bufferToWORDs
+                |> List.map (wORDToPosition WordBegin)
+                |> List.Extra.find (isPositionAfterCursor cursor)
+                |> Maybe.map cursorFromPosition
+                |> Maybe.withDefault (cursorMoveToEndOfLine buffer cursor)
+
+        NextWORDEnd ->
+            buffer
+                |> bufferToWORDs
+                |> rejectEmptyWORDs
+                |> List.map (wORDToPosition WordEnd)
+                |> List.Extra.find (isPositionAfterCursor cursor)
+                |> Maybe.map cursorFromPosition
+                |> Maybe.withDefault (cursorMoveToEndOfLine buffer cursor)
+
+        PrevWord ->
+            buffer
+                |> bufferToWords
+                |> List.map (wordToPosition WordBegin)
+                |> List.filter (isPositionBeforeCursor cursor)
+                |> List.Extra.last
+                |> Maybe.map cursorFromPosition
+                |> Maybe.withDefault (Cursor 0 0)
+
+        PrevWORD ->
+            buffer
+                |> bufferToWORDs
+                |> List.map (wORDToPosition WordBegin)
+                |> List.filter (isPositionBeforeCursor cursor)
+                |> List.Extra.last
+                |> Maybe.map cursorFromPosition
+                |> Maybe.withDefault (Cursor 0 0)
 
 
 handleInsertMode : String -> Model -> ( Model, List Msg )

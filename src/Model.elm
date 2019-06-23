@@ -45,7 +45,7 @@ type Msg
     | ActionExecuted Action
     | ClearBuffer
     | ClearLine Int
-    | DeleteChar Int Int
+    | DeleteChar Position
     | DeleteLine Int
     | ApplyCommandOnTextObject Command TextObject
     | InsertNewLine Int

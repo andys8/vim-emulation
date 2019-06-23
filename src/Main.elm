@@ -240,7 +240,7 @@ update msg model =
             in
             ( { model | buffer = Buffer buffer, cursor = moveCursor model.cursor }, Cmd.none )
 
-        DeleteChar line char ->
+        DeleteChar (Position line char) ->
             let
                 { before, after } =
                     splitBufferContent (Position line char) model.buffer
@@ -560,14 +560,14 @@ executeAction (Cursor cursorLine cursorChar) action =
                     [ InsertNewLine cursorLine, SetMode Insert, MoveCursor LineBegin ]
 
                 Action_Delete ->
-                    [ DeleteChar cursorLine cursorChar ]
+                    [ DeleteChar (Position cursorLine cursorChar) ]
 
                 Action_x ->
-                    [ DeleteChar cursorLine cursorChar ]
+                    [ DeleteChar (Position cursorLine cursorChar) ]
 
                 Action_X ->
                     if cursorChar > 0 then
-                        [ DeleteChar cursorLine (cursorChar - 1), MoveCursor (Left 1) ]
+                        [ DeleteChar (Position cursorLine (cursorChar - 1)), MoveCursor (Left 1) ]
 
                     else
                         []

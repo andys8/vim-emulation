@@ -185,12 +185,21 @@ all =
                             [ expectBuffer "bc"
                             , expectCursorAt "b"
                             ]
-            , test "S deletes line, goes in insert mode in first char" <|
+            , test "S deletes line, goes in insert mode to first char" <|
                 \_ ->
-                    initModelWithBuffer "abcde"
+                    initModelWithBuffer "abcde\nb"
                         |> keySequence [ "l", "S" ]
                         |> Expect.all
-                            [ expectBuffer ""
+                            [ expectBuffer "\nb"
+                            , expectCursor (Cursor 0 0)
+                            , expectMode Insert
+                            ]
+            , test "cc deletes line, goes in insert mode to first char" <|
+                \_ ->
+                    initModelWithBuffer "abcde\nb"
+                        |> keySequence [ "l", "c", "c" ]
+                        |> Expect.all
+                            [ expectBuffer "\nb"
                             , expectCursor (Cursor 0 0)
                             , expectMode Insert
                             ]

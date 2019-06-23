@@ -10,6 +10,7 @@ type ActionChange
     = Action_diw
     | Action_ciw
     | Action_dd
+    | Action_cc
     | Action_i
     | Action_I
     | Action_S
@@ -60,6 +61,9 @@ fromKeyStrokes keyStrokes =
 
         "d" :: "d" :: _ ->
             Just <| ActionChangeType Action_dd
+
+        "c" :: "c" :: _ ->
+            Just <| ActionChangeType Action_cc
 
         "y" :: "y" :: _ ->
             Just <| ActionNoChangeType Action_yy

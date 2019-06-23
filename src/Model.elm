@@ -78,6 +78,7 @@ type CursorDirection
     | PrevWORD
     | FirstLine
     | LastLine
+    | ToLine Int
 
 
 type Buffer

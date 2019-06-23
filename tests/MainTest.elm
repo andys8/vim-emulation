@@ -503,6 +503,46 @@ all =
                                 , expectMode Normal
                                 , expectBuffer ""
                                 ]
+                , describe ":<line> jumps to line"
+                    [ test "jump to first line with :0" <|
+                        \_ ->
+                            initModelWithBuffer " a\n  b"
+                                |> keySequence [ "j", ":", "0", "Enter" ]
+                                |> expectCursorAt "a"
+                    , test "jump to first line with :1" <|
+                        \_ ->
+                            initModelWithBuffer " a\n  b"
+                                |> keySequence [ "j", ":", "1", "Enter" ]
+                                |> expectCursorAt "a"
+                    , test "jump to second line with :2" <|
+                        \_ ->
+                            initModelWithBuffer " a\n  b"
+                                |> keySequence [ ":", "2", "Enter" ]
+                                |> expectCursorAt "b"
+                    , test "jump to second/last line with :3" <|
+                        \_ ->
+                            initModelWithBuffer " a\n  b"
+                                |> keySequence [ ":", "3", "Enter" ]
+                                |> expectCursorAt "b"
+                    , test "jump will move cursor to character" <|
+                        \_ ->
+                            initModelWithBuffer " a"
+                                |> keySequence [ ":", "1", "Enter" ]
+                                |> expectCursorAt "a"
+                    , fuzz3 Fuzzers.buffer Fuzzers.movements (Fuzz.intRange 0 20) ":<lineNumber> jumps to line" <|
+                        \buffer movements line ->
+                            let
+                                expectedLine =
+                                    line - 1 |> clamp 0 (bufferToLinesCount (Buffer buffer) - 1)
+
+                                lineAsKeys =
+                                    String.split "" (String.fromInt line)
+                            in
+                            initModelWithBuffer buffer
+                                |> keySequence movements
+                                |> keySequence (":" :: lineAsKeys ++ [ "Enter" ])
+                                |> expectCursorLine expectedLine
+                    ]
                 ]
             ]
         ]
@@ -558,6 +598,11 @@ expectCursorAt char ( model, _ ) =
             splitBufferContent (cursorToPosition cursor) model.buffer
     in
     Expect.equal char middle
+
+
+expectCursorLine : Int -> ( Model, Cmd Msg ) -> Expectation
+expectCursorLine cursorLine =
+    Tuple.first >> .cursor >> cursorLine_ >> Expect.equal cursorLine
 
 
 expectEqualBuffers :

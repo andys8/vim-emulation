@@ -352,7 +352,10 @@ update msg model =
                             Cursor 0 char
 
                         LastLine ->
-                            Cursor ((bufferToLines model.buffer |> List.length) - 1) char
+                            Cursor (bufferToLinesCount model.buffer - 1) char
+
+                        ToLine lineNumber ->
+                            Cursor (clamp 0 (bufferToLinesCount model.buffer - 1) (lineNumber - 1)) char
 
                         FirstWORDinLine ->
                             model.buffer
@@ -661,19 +664,33 @@ handleCommandMode key model =
 
 handleCommandLineEntered : String -> List Msg
 handleCommandLineEntered text =
-    let
-        command =
-            -- Ignore "!" for now, but has to be implemnted
-            String.replace "!" "" text
-    in
-    if List.member command [ "q", "qa", "wq", "x" ] then
-        [ ExecuteCmd quitVim ]
+    case String.toInt text of
+        Just lineNumber ->
+            if String.startsWith "+" text then
+                -- TODO: Implement "MoveCursor (Down i)"
+                []
 
-    else if List.member command [ "bd", "bdelete" ] then
-        [ ClearBuffer ]
+            else if String.startsWith "-" text then
+                -- TODO: Implement "MoveCursor (Up i)"
+                []
 
-    else
-        []
+            else
+                [ MoveCursor (ToLine lineNumber), MoveCursor FirstWORDinLine ]
+
+        _ ->
+            let
+                command =
+                    -- Ignore "!" for now, but has to be implemnted
+                    String.replace "!" "" text
+            in
+            if List.member command [ "q", "qa", "wq", "x" ] then
+                [ ExecuteCmd quitVim ]
+
+            else if List.member command [ "bd", "bdelete" ] then
+                [ ClearBuffer ]
+
+            else
+                []
 
 
 quitVim : Cmd a

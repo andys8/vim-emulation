@@ -3,6 +3,8 @@
 [Vim](https://www.vim.org) implemented in [Elm](https://elm-lang.org).
 [Give it a try!](https://andys8.github.io/vim-emulation)
 
+![Screenshot](screenshot-vim-in-elm.png)
+
 ## Features
 
 ### Basic Movement

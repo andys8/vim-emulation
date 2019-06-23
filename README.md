@@ -1,15 +1,17 @@
 # vim-emulation
 
-Vim implemented in [Elm](https://elm-lang.org)
+[Vim](https://www.vim.org) implemented in [Elm](https://elm-lang.org).
+
+[Give it a try!](https://andys8.github.io/vim-emulation)
 
 ## Features
 
 ### Basic Movement
 
 - <kbd>h</kbd> <kbd>l</kbd> <kbd>k</kbd> <kbd>j</kbd> character left, right; line up, down
-- <kbd>w</kbd>/<kbd>W</kbd> word/WORD right
-- <kbd>b</kbd>/<kbd>B</kbd> word/WORD left
-- <kbd>e</kbd>/<kbd>E</kbd> end of word/WORD right
+- <kbd>w</kbd> <kbd>W</kbd> word/WORD right
+- <kbd>b</kbd> <kbd>B</kbd> word/WORD left
+- <kbd>e</kbd> <kbd>E</kbd> end of word/WORD right
 - <kbd>0</kbd> beginning of line
 - <kbd>^</kbd> first character of line
 - <kbd>$</kbd> last character of line

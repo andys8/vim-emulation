@@ -1,1 +1,0 @@
-{"version":3,"sources":["main.css"],"names":[],"mappings":"AAAA,+BAIE,WACA,YACA,SACA,UACA,cACA,eAAiB,C","file":"static/css/main.16112436.chunk.css","sourcesContent":["html,\nbody,\n#root,\n[data-elm-hot] {\n  width: 100%;\n  height: 100%;\n  margin: 0;\n  padding: 0;\n  color: #293c4b;\n  overflow: hidden;\n}\n\n"],"sourceRoot":""}

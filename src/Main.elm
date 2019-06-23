@@ -98,13 +98,30 @@ update msg model =
             in
             ( { model | buffer = Buffer buffer }, Cmd.none )
 
-        InsertText text ->
+        InsertText position text ->
             let
                 { before, middle, after } =
-                    splitBufferContent (cursorToPosition model.cursor) model.buffer
+                    splitBufferContent position model.buffer
 
                 buffer =
                     before ++ text ++ middle ++ after
+            in
+            ( { model | buffer = Buffer buffer }, Cmd.none )
+
+        DeleteTextPartial position text ->
+            let
+                deletePartialAcc search result =
+                    if not (String.isEmpty search) && String.startsWith (String.left 1 search) result then
+                        deletePartialAcc (String.dropLeft 1 search) (String.dropLeft 1 result)
+
+                    else
+                        result
+
+                { before, middle, after } =
+                    splitBufferContent position model.buffer
+
+                buffer =
+                    before ++ deletePartialAcc text (middle ++ after)
             in
             ( { model | buffer = Buffer buffer }, Cmd.none )
 
@@ -516,7 +533,10 @@ executeAction (Cursor cursorLine cursorChar) action =
                     [ RepeatLastChangeAction ]
 
                 Action_RightShift ->
-                    [ InsertText (String.repeat config.shiftWidth " "), MoveCursor FirstWORDinLine ]
+                    [ InsertText (Position cursorLine 0) shift, MoveCursor FirstWORDinLine ]
+
+                Action_LeftShift ->
+                    [ DeleteTextPartial (Position cursorLine 0) shift, MoveCursor FirstWORDinLine ]
 
                 Action_S ->
                     [ ClearLine cursorLine, SetMode Insert ]
@@ -715,3 +735,8 @@ applyMsgs : ( Model, List Msg ) -> ( Model, Cmd Msg )
 applyMsgs ( model, msgs ) =
     ( model, Cmd.none )
         |> sequence update msgs
+
+
+shift : String
+shift =
+    String.repeat config.shiftWidth " "

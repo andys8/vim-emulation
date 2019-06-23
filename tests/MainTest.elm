@@ -3,6 +3,7 @@ module MainTest exposing (all)
 import Buffer exposing (..)
 import Config exposing (config)
 import Expect exposing (Expectation)
+import Fuzz
 import Fuzzers
 import List
 import Main exposing (update)
@@ -377,11 +378,7 @@ all =
                                 ]
                 , fuzz Fuzzers.spaces "Right shift will set cursor to first letter" <|
                     \spaces ->
-                        let
-                            buffer =
-                                spaces ++ "a"
-                        in
-                        initModelWithBuffer buffer
+                        initModelWithBuffer (spaces ++ "a")
                             |> keySequence [ ">", ">" ]
                             |> expectCursorAt "a"
                 , fuzz Fuzzers.buffer "Right shift increases width by config.shiftWidth" <|
@@ -390,6 +387,37 @@ all =
                             |> keySequence [ ">", ">" ]
                             |> expectBufferTo
                                 (String.length >> Expect.equal (String.length buffer + config.shiftWidth))
+                , test "Right shift inserts text at beginning of line" <|
+                    \_ ->
+                        initModelWithBuffer "a b"
+                            |> keySequence [ "l", "l", ">", ">" ]
+                            |> Expect.all
+                                [ expectBuffer (shift ++ "a b")
+                                , expectCursorAt "a"
+                                ]
+                , fuzz2 Fuzzers.buffer Fuzzers.movements "Right and left shift combines won't change buffer" <|
+                    \buffer movements ->
+                        initModelWithBuffer buffer
+                            |> keySequence movements
+                            |> keySequence [ ">", ">" ]
+                            |> keySequence [ "<", "<" ]
+                            |> expectBuffer buffer
+                , fuzz Fuzzers.movements "Left shift sets cursor to first word" <|
+                    \movements ->
+                        initModelWithBuffer "     a   "
+                            |> keySequence movements
+                            |> keySequence [ "<", "<" ]
+                            |> expectCursorAt "a"
+                , test "Left shift deletes also fewer spaces than shiftWidth" <|
+                    \_ ->
+                        initModelWithBuffer " a"
+                            |> keySequence [ "<", "<" ]
+                            |> expectBuffer "a"
+                , fuzz2 Fuzzers.buffer Fuzzers.spaces "Left shift deletes shiftWidth spaces at beginning" <|
+                    \buffer spaces ->
+                        initModelWithBuffer (shift ++ spaces ++ buffer)
+                            |> keySequence [ "<", "<" ]
+                            |> expectBuffer (spaces ++ buffer)
                 ]
             , describe "Repeat with dot (.)"
                 [ test "Delete line" <|
@@ -556,3 +584,12 @@ expectBufferTo expect =
         >> .buffer
         >> (\(Buffer b) -> b)
         >> expect
+
+
+
+-- constants
+
+
+shift : String
+shift =
+    String.repeat config.shiftWidth " "

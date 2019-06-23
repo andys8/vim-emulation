@@ -1,7 +1,6 @@
 # vim-emulation
 
 [Vim](https://www.vim.org) implemented in [Elm](https://elm-lang.org).
-
 [Give it a try!](https://andys8.github.io/vim-emulation)
 
 ## Features
@@ -24,7 +23,31 @@
 - <kbd>I</kbd> <kbd>A</kbd>	insert at beginning, end of line
 - <kbd>o</kbd> <kbd>O</kbd>	open a new line below, above the current line
 - <kbd><<</kbd> <kbd>>></kbd> shift left, right
+- <kbd>S</kbd> <kbd>cc</kbd> change current line
 - <kbd>ciw</kbd> change text in word
+
+### Deletion
+
+- <kbd>x</kbd> <kbd>Delete</kbd> delete character under cursor
+- <kbd>X</kbd> delete character before cursor
+- <kbd>dd</kbd> delete current line
+- <kbd>diw</kbd> delete text in word
+
+### Copying
+
+- <kbd>yy</kbd> yank current line
+- <kbd>yiw</kbd> yank in word
+- <kbd>p</kbd> put register after cursor position
+- <kbd>P</kbd> put register before cursor position
+
+### Ex commands
+
+- <kbd>:q!</kbd> quit and discard changes
+- <kbd>:[n]</kbd> jump to an absolute line number `[n]`
+
+### Undoing, repeating & registers
+
+- <kbd>.</kbd> repeat last changes (*WIP*)
 
 ## Further information
 

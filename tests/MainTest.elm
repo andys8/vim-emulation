@@ -1,6 +1,7 @@
 module MainTest exposing (all)
 
 import Buffer exposing (..)
+import Config exposing (config)
 import Expect exposing (Expectation)
 import Fuzzers
 import List
@@ -365,6 +366,31 @@ all =
                         initWithKeySequence [ "c", "i" ]
                             |> expectMode Normal
                 ]
+            , describe "shift"
+                [ test "Right shift" <|
+                    \_ ->
+                        initModelWithBuffer "a\nb"
+                            |> keySequence [ ">", ">" ]
+                            |> Expect.all
+                                [ expectBuffer (String.repeat config.shiftWidth " " ++ "a\nb")
+                                , expectCursorAt "a"
+                                ]
+                , fuzz Fuzzers.spaces "Right shift will set cursor to first letter" <|
+                    \spaces ->
+                        let
+                            buffer =
+                                spaces ++ "a"
+                        in
+                        initModelWithBuffer buffer
+                            |> keySequence [ ">", ">" ]
+                            |> expectCursorAt "a"
+                , fuzz Fuzzers.buffer "Right shift increases width by config.shiftWidth" <|
+                    \buffer ->
+                        initModelWithBuffer buffer
+                            |> keySequence [ ">", ">" ]
+                            |> expectBufferTo
+                                (String.length >> Expect.equal (String.length buffer + config.shiftWidth))
+                ]
             , describe "Repeat with dot (.)"
                 [ test "Delete line" <|
                     \_ ->
@@ -522,3 +548,11 @@ expectEqualBuffers buffer f1 f2 =
     Expect.equal
         (model |> f1 |> toBuffer)
         (model |> f2 |> toBuffer)
+
+
+expectBufferTo : (String -> Expectation) -> ( Model, Cmd Msg ) -> Expectation
+expectBufferTo expect =
+    Tuple.first
+        >> .buffer
+        >> (\(Buffer b) -> b)
+        >> expect

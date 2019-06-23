@@ -1,4 +1,4 @@
-module Fuzzers exposing (buffer, simpleKey)
+module Fuzzers exposing (buffer, simpleKey, spaces)
 
 import Fuzz exposing (Fuzzer)
 
@@ -14,3 +14,9 @@ simpleKey =
     [ "a", "b", "c" ]
         |> List.map Fuzz.constant
         |> Fuzz.oneOf
+
+
+spaces : Fuzzer String
+spaces =
+    Fuzz.intRange 0 20
+        |> Fuzz.map (\i -> String.repeat i " ")

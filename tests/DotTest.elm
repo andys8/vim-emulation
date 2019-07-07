@@ -42,6 +42,16 @@ all =
                 initModelWithBuffer "ab\n\ncd"
                     |> keySequence [ "c", "i", "w", "x", "Escape", "j", ".", "j", "." ]
                     |> expectBuffer "x\nx\nx"
+        , test "backspaces can't delete more than there is" <|
+            \_ ->
+                initModelWithBuffer "a abc abc"
+                    |> keySequence [ "c", "i", "w", "Backspace", "Backspace", "Backspace", "x", "Escape", "w", ".", "w", "." ]
+                    |> expectBuffer "x x x"
+        , test "delete keys _can_ delete more than there is" <|
+            \_ ->
+                initModelWithBuffer "abc abc a"
+                    |> keySequence [ "$", "c", "i", "w", "Delete", "Delete", "Delete", "x", "Escape", "b", ".", "b", "." ]
+                    |> expectBuffer "x"
         , describe "Verify key sequences lead to the same result"
             [ testEqualKeySequence "Has no effect with movements only"
                 []

@@ -445,6 +445,12 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
     else if List.member keyDown ignoredTextInsertKeys then
         ( model, [] )
 
+    else if keyDown == "Backspace" && cursor == Cursor 0 0 then
+        -- Ignoring this edge casse early helps to handle different behavior
+        -- with Delete and Backspace when being repeated
+        -- Backspace "nothing" will not be replayed, but "Delete" will
+        ( model, [] )
+
     else
         let
             (Cursor cursorLine cursorChar) =

@@ -29,6 +29,6 @@ movements =
 
 movement : Fuzzer String
 movement =
-    [ "h", "j", "k", "l" ]
+    [ "h", "j", "k", "l", "w", "b", "e", "^", "G" ]
         |> List.map Fuzz.constant
         |> Fuzz.oneOf

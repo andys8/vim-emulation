@@ -5,15 +5,17 @@ module TestUtil exposing
     , expectCursor
     , expectCursorAt
     , expectCursorLine
-    , expectEqualBuffers
+    , expectEqualModel
     , expectMode
     , initModelWithBuffer
     , initWithKeySequence
     , keySequence
+    , testEqualKeySequence
     )
 
 import Buffer exposing (..)
 import Expect exposing (Expectation)
+import Fuzzers
 import List
 import Main exposing (update)
 import Model exposing (Buffer(..), Cursor(..), Mode(..), Model, Msg(..), initModel)
@@ -35,6 +37,10 @@ initWithKeySequence keys =
 keySequence : List String -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
 keySequence keys =
     sequence update (List.map KeyDown keys)
+
+
+
+-- Expectations
 
 
 expectBuffer : String -> ( Model, Cmd Msg ) -> Expectation
@@ -74,22 +80,31 @@ expectCursorLine cursorLine =
     Tuple.first >> .cursor >> cursorLine_ >> Expect.equal cursorLine
 
 
-expectEqualBuffers :
+expectEqualModel :
     String
     -> (( Model, Cmd Msg ) -> ( Model, Cmd Msg ))
     -> (( Model, Cmd Msg ) -> ( Model, Cmd Msg ))
     -> Expectation
-expectEqualBuffers buffer f1 f2 =
+expectEqualModel buffer f1 f2 =
     let
         model =
             initModelWithBuffer buffer
 
         toBuffer =
             Tuple.first >> .buffer
+
+        toCursor =
+            Tuple.first >> .cursor
+
+        toMode =
+            Tuple.first >> .mode
     in
-    Expect.equal
-        (model |> f1 |> toBuffer)
-        (model |> f2 |> toBuffer)
+    ( f1 model, f2 model )
+        |> Expect.all
+            [ \( m1, m2 ) -> Expect.equal (toBuffer m1) (toBuffer m2)
+            , \( m1, m2 ) -> Expect.equal (toCursor m1) (toCursor m2)
+            , \( m1, m2 ) -> Expect.equal (toMode m1) (toMode m2)
+            ]
 
 
 expectBufferTo : (String -> Expectation) -> ( Model, Cmd Msg ) -> Expectation
@@ -98,3 +113,16 @@ expectBufferTo expect =
         >> .buffer
         >> (\(Buffer b) -> b)
         >> expect
+
+
+
+-- Tests
+
+
+testEqualKeySequence : String -> List String -> List String -> Test
+testEqualKeySequence testName keys1 keys2 =
+    fuzz2 Fuzzers.buffer Fuzzers.movements testName <|
+        \buffer movements ->
+            expectEqualModel buffer
+                (keySequence movements >> keySequence keys1)
+                (keySequence movements >> keySequence keys2)

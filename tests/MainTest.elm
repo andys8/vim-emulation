@@ -83,7 +83,7 @@ all =
                                 ]
                 , fuzz Fuzzers.buffer "Y and yy are synonyms" <|
                     \buffer ->
-                        expectEqualBuffers buffer
+                        expectEqualModel buffer
                             (keySequence [ "y", "y", "p", "p" ])
                             (keySequence [ "Y", "p", "p" ])
                 ]
@@ -204,7 +204,7 @@ all =
                             ]
             , fuzz2 Fuzzers.buffer Fuzzers.movements "cc and S are synonyms" <|
                 \buffer movements ->
-                    expectEqualBuffers buffer
+                    expectEqualModel buffer
                         (keySequence movements >> keySequence [ "c", "c" ])
                         (keySequence movements >> keySequence [ "S" ])
             , test "S with multiple lines" <|
@@ -368,15 +368,6 @@ all =
                     \_ ->
                         initWithKeySequence [ "c", "i" ]
                             |> expectMode Normal
-                , skip <|
-                    test "change can be repeated with dot" <|
-                        \_ ->
-                            initModelWithBuffer "abc def"
-                                |> keySequence [ "c", "i", "w", "a", "Escape", "w", "." ]
-                                |> Expect.all
-                                    [ expectBuffer "a a"
-                                    , expectMode Normal
-                                    ]
                 ]
             , describe "shift"
                 [ test "Right shift" <|
@@ -429,43 +420,6 @@ all =
                         initModelWithBuffer (shift ++ spaces ++ buffer)
                             |> keySequence [ "<", "<" ]
                             |> expectBuffer (spaces ++ buffer)
-                ]
-            , describe "Repeat with dot (.)"
-                [ test "Delete line" <|
-                    \_ ->
-                        initModelWithBuffer "a\nb\nc"
-                            |> keySequence [ "d", "d", "." ]
-                            |> expectBuffer "c"
-                , test "Paste line" <|
-                    \_ ->
-                        initModelWithBuffer "a"
-                            |> keySequence [ "y", "y", "p", "." ]
-                            |> expectBuffer "a\na\na"
-                , test "Dot repeats paste, but content can change" <|
-                    \_ ->
-                        initModelWithBuffer "a\nb"
-                            |> keySequence [ "y", "y", "p", "j", "y", "y", "." ]
-                            |> expectBuffer "a\na\nb\nb"
-                , fuzz Fuzzers.buffer "Delete line with fuzzed buffer" <|
-                    \buffer ->
-                        expectEqualBuffers buffer
-                            (keySequence [ "d", "d", "d", "d" ])
-                            (keySequence [ "d", "d", "." ])
-                , fuzz Fuzzers.buffer "Pasting line somewhere" <|
-                    \buffer ->
-                        expectEqualBuffers buffer
-                            (keySequence [ "y", "y", "p", "j", "p" ])
-                            (keySequence [ "y", "y", "p", "j", "." ])
-                , fuzz Fuzzers.buffer "3x delete in word" <|
-                    \buffer ->
-                        expectEqualBuffers buffer
-                            (keySequence [ "d", "i", "w", "d", "i", "w", "d", "i", "w" ])
-                            (keySequence [ "d", "i", "w", ".", "." ])
-                , fuzz Fuzzers.buffer "3x delete in word and next word" <|
-                    \buffer ->
-                        expectEqualBuffers buffer
-                            (keySequence [ "d", "i", "w", "w", "d", "i", "w", "w", "d", "i", "w" ])
-                            (keySequence [ "d", "i", "w", "w", ".", "w", "." ])
                 ]
             , describe "Commandline mode"
                 [ test ": Enters commandline" <|

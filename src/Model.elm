@@ -21,7 +21,8 @@ type alias Model =
     { buffer : Buffer
     , mode : Mode
     , cursor : Cursor
-    , keyStrokes : List String
+    , normalModeKeyStrokes : List String
+    , insertModeKeyStrokes : List String
     , register : Register
     , actions : List Action
     , commandLine : String
@@ -33,7 +34,8 @@ initModel =
     { buffer = Buffer ""
     , mode = Normal
     , cursor = Cursor 0 0
-    , keyStrokes = []
+    , normalModeKeyStrokes = []
+    , insertModeKeyStrokes = []
     , register = RegisterString ""
     , actions = []
     , commandLine = ""
@@ -131,3 +133,5 @@ type Command
     = DeleteCommand
     | YankCommand
     | ChangeCommand
+
+

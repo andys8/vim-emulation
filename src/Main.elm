@@ -77,8 +77,17 @@ update msg model =
 
                     else
                         model.cursor
+
+                insertModeKeyStrokes =
+                    if mode == Insert && model.mode /= Insert then
+                        []
+
+                    else
+                        model.insertModeKeyStrokes
             in
-            ( { model | mode = mode, cursor = cursor }, Cmd.none )
+            ( { model | mode = mode, cursor = cursor, insertModeKeyStrokes = insertModeKeyStrokes }
+            , Cmd.none
+            )
 
         SetCursor cursor ->
             ( { model | cursor = cursor }, Cmd.none )
@@ -123,14 +132,18 @@ update msg model =
             ( { model | buffer = Buffer buffer }, Cmd.none )
 
         ActionExecuted action ->
-            ( { model | keyStrokes = [], actions = action :: model.actions }
+            ( { model
+                | normalModeKeyStrokes = []
+                , actions = action :: model.actions
+              }
             , Cmd.none
             )
 
         RepeatLastChangeAction ->
             let
                 -- TODO: E.g. 'ciw' has to include the actual change in insert mode
-                -- TODO: Repeat changes done in insert mode
+                -- Use model.insertModeKeyStrokes
+                -- TODO: Repeat changes done in insert mode (only)
                 isLastChangeAction action =
                     (isJust (toActionChange action) && action /= ActionChangeType Action_Dot)
                         || isJust (toActionInsert action)
@@ -488,14 +501,19 @@ handleInsertMode keyDown ({ buffer, cursor } as model) =
                     _ ->
                         ( before ++ keyDown ++ middle ++ after, [ MoveCursor (Right 1) ] )
         in
-        ( { model | buffer = Buffer buffer_ }, msgs )
+        ( { model
+            | buffer = Buffer buffer_
+            , insertModeKeyStrokes = keyDown :: model.insertModeKeyStrokes
+          }
+        , msgs
+        )
 
 
 handleNormalMode : String -> Model -> ( Model, List Msg )
 handleNormalMode key model =
     let
         keyStrokes =
-            key :: model.keyStrokes
+            key :: model.normalModeKeyStrokes
 
         actionToMsgs action =
             executeAction model.cursor action ++ [ ActionExecuted action ]
@@ -506,7 +524,7 @@ handleNormalMode key model =
                 |> Maybe.map actionToMsgs
                 |> Maybe.withDefault []
     in
-    ( { model | keyStrokes = keyStrokes }, msgs )
+    ( { model | normalModeKeyStrokes = keyStrokes }, msgs )
 
 
 executeAction : Cursor -> Action -> List Msg
@@ -766,3 +784,5 @@ isJust maybe =
 
         Nothing ->
             False
+
+

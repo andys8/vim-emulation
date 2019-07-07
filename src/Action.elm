@@ -1,24 +1,32 @@
-module Action exposing (Action(..), ActionChange(..), ActionNoChange(..), fromKeyStrokes, isChangeAction)
+module Action exposing (Action(..), ActionChange(..), ActionInsert(..), ActionMove(..), fromKeyStrokes, isChangeAction)
 
 
 type Action
-    = ActionChangeType ActionChange
-    | ActionNoChangeType ActionNoChange
+    = ActionInsertType ActionInsert
+    | ActionChangeType ActionChange
+    | ActionMoveType ActionMove
 
 
-type ActionChange
-    = Action_diw
-    | Action_ciw
-    | Action_dd
+{-| Leads to insert mode, which has to be considered for repeat (.)
+-}
+type ActionInsert
+    = Action_ciw
     | Action_cc_or_S
     | Action_i
     | Action_I
     | Action_a
     | Action_A
-    | Action_p
-    | Action_P
     | Action_o
     | Action_O
+
+
+{-| Changes the buffer, but without insert mode involved
+-}
+type ActionChange
+    = Action_diw
+    | Action_dd
+    | Action_p
+    | Action_P
     | Action_Delete
     | Action_x
     | Action_X
@@ -27,7 +35,9 @@ type ActionChange
     | Action_LeftShift
 
 
-type ActionNoChange
+{-| Doesn't change the buffer at all
+-}
+type ActionMove
     = Action_h
     | Action_j
     | Action_k
@@ -63,22 +73,22 @@ fromKeyStrokes keyStrokes =
             Just <| ActionChangeType Action_diw
 
         "w" :: "i" :: "c" :: _ ->
-            Just <| ActionChangeType Action_ciw
+            Just <| ActionInsertType Action_ciw
 
         "w" :: "i" :: "y" :: _ ->
-            Just <| ActionNoChangeType Action_yiw
+            Just <| ActionMoveType Action_yiw
 
         "d" :: "d" :: _ ->
             Just <| ActionChangeType Action_dd
 
         "c" :: "c" :: _ ->
-            Just <| ActionChangeType Action_cc_or_S
+            Just <| ActionInsertType Action_cc_or_S
 
         "y" :: "y" :: _ ->
-            Just <| ActionNoChangeType Action_yy_or_Y
+            Just <| ActionMoveType Action_yy_or_Y
 
         "g" :: "g" :: _ ->
-            Just <| ActionNoChangeType Action_gg
+            Just <| ActionMoveType Action_gg
 
         ">" :: ">" :: _ ->
             Just <| ActionChangeType Action_RightShift
@@ -97,28 +107,28 @@ fromKeyStrokes keyStrokes =
             Nothing
 
         "Y" :: _ ->
-            Just <| ActionNoChangeType Action_yy_or_Y
+            Just <| ActionMoveType Action_yy_or_Y
 
         "i" :: _ ->
-            Just <| ActionChangeType Action_i
+            Just <| ActionInsertType Action_i
 
         "I" :: _ ->
-            Just <| ActionChangeType Action_I
+            Just <| ActionInsertType Action_I
 
         ":" :: _ ->
-            Just <| ActionNoChangeType Action_Colon
+            Just <| ActionMoveType Action_Colon
 
         "." :: _ ->
             Just <| ActionChangeType Action_Dot
 
         "S" :: _ ->
-            Just <| ActionChangeType Action_cc_or_S
+            Just <| ActionInsertType Action_cc_or_S
 
         "a" :: _ ->
-            Just <| ActionChangeType Action_a
+            Just <| ActionInsertType Action_a
 
         "A" :: _ ->
-            Just <| ActionChangeType Action_A
+            Just <| ActionInsertType Action_A
 
         "p" :: _ ->
             Just <| ActionChangeType Action_p
@@ -127,10 +137,10 @@ fromKeyStrokes keyStrokes =
             Just <| ActionChangeType Action_P
 
         "o" :: _ ->
-            Just <| ActionChangeType Action_o
+            Just <| ActionInsertType Action_o
 
         "O" :: _ ->
-            Just <| ActionChangeType Action_O
+            Just <| ActionInsertType Action_O
 
         "Delete" :: _ ->
             Just <| ActionChangeType Action_Delete
@@ -142,46 +152,46 @@ fromKeyStrokes keyStrokes =
             Just <| ActionChangeType Action_X
 
         "0" :: _ ->
-            Just <| ActionNoChangeType Action_0
+            Just <| ActionMoveType Action_0
 
         "^" :: _ ->
-            Just <| ActionNoChangeType Action_Graph
+            Just <| ActionMoveType Action_Graph
 
         "G" :: _ ->
-            Just <| ActionNoChangeType Action_G
+            Just <| ActionMoveType Action_G
 
         "w" :: _ ->
-            Just <| ActionNoChangeType Action_w
+            Just <| ActionMoveType Action_w
 
         "W" :: _ ->
-            Just <| ActionNoChangeType Action_W
+            Just <| ActionMoveType Action_W
 
         "b" :: _ ->
-            Just <| ActionNoChangeType Action_b
+            Just <| ActionMoveType Action_b
 
         "B" :: _ ->
-            Just <| ActionNoChangeType Action_B
+            Just <| ActionMoveType Action_B
 
         "e" :: _ ->
-            Just <| ActionNoChangeType Action_e
+            Just <| ActionMoveType Action_e
 
         "E" :: _ ->
-            Just <| ActionNoChangeType Action_E
+            Just <| ActionMoveType Action_E
 
         "$" :: _ ->
-            Just <| ActionNoChangeType Action_Dollar
+            Just <| ActionMoveType Action_Dollar
 
         "h" :: _ ->
-            Just <| ActionNoChangeType Action_h
+            Just <| ActionMoveType Action_h
 
         "j" :: _ ->
-            Just <| ActionNoChangeType Action_j
+            Just <| ActionMoveType Action_j
 
         "k" :: _ ->
-            Just <| ActionNoChangeType Action_k
+            Just <| ActionMoveType Action_k
 
         "l" :: _ ->
-            Just <| ActionNoChangeType Action_l
+            Just <| ActionMoveType Action_l
 
         _ ->
             Nothing
@@ -189,9 +199,13 @@ fromKeyStrokes keyStrokes =
 
 isChangeAction : Action -> Bool
 isChangeAction action =
+    -- TODO: Refactor to extract Maybe or Prism
     case action of
+        ActionInsertType _ ->
+            True
+
         ActionChangeType _ ->
             True
 
-        ActionNoChangeType _ ->
+        ActionMoveType _ ->
             False

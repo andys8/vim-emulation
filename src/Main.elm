@@ -1,6 +1,6 @@
 module Main exposing (main, update)
 
-import Action exposing (Action(..), ActionChange(..), ActionNoChange(..), isChangeAction)
+import Action exposing (Action(..), ActionChange(..), ActionInsert(..), ActionMove(..), isChangeAction)
 import Browser
 import Browser.Dom
 import Browser.Navigation as Navigation
@@ -274,6 +274,7 @@ update msg model =
                                 model.buffer
                                 (Buffer <| before ++ String.dropLeft (String.length wordContent) (middle ++ after))
 
+                        -- TODO: Maybe extracing insert mode to outside
                         mode =
                             ifThenElse
                                 (command == ChangeCommand)
@@ -513,16 +514,10 @@ handleNormalMode key model =
 executeAction : Cursor -> Action -> List Msg
 executeAction (Cursor cursorLine cursorChar) action =
     case action of
-        ActionChangeType action_ ->
+        ActionInsertType action_ ->
             case action_ of
-                Action_diw ->
-                    [ ApplyCommandOnTextObject DeleteCommand InWord ]
-
                 Action_ciw ->
                     [ ApplyCommandOnTextObject ChangeCommand InWord ]
-
-                Action_dd ->
-                    [ YankLine cursorLine, DeleteLine cursorLine ]
 
                 Action_cc_or_S ->
                     [ ClearLine cursorLine, SetMode Insert ]
@@ -533,6 +528,26 @@ executeAction (Cursor cursorLine cursorChar) action =
                 Action_I ->
                     [ SetMode Insert, MoveCursor LineBegin ]
 
+                Action_a ->
+                    [ SetMode Insert, MoveCursor (Right 1) ]
+
+                Action_A ->
+                    [ SetMode Insert, MoveCursor LineEnd ]
+
+                Action_o ->
+                    [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]
+
+                Action_O ->
+                    [ InsertNewLine cursorLine, SetMode Insert, MoveCursor LineBegin ]
+
+        ActionChangeType action_ ->
+            case action_ of
+                Action_diw ->
+                    [ ApplyCommandOnTextObject DeleteCommand InWord ]
+
+                Action_dd ->
+                    [ YankLine cursorLine, DeleteLine cursorLine ]
+
                 Action_Dot ->
                     [ RepeatLastChangeAction ]
 
@@ -542,23 +557,11 @@ executeAction (Cursor cursorLine cursorChar) action =
                 Action_LeftShift ->
                     [ DeleteTextPartial (Position cursorLine 0) shift, MoveCursor FirstWORDinLine ]
 
-                Action_a ->
-                    [ SetMode Insert, MoveCursor (Right 1) ]
-
-                Action_A ->
-                    [ SetMode Insert, MoveCursor LineEnd ]
-
                 Action_p ->
                     [ PasteAfter ]
 
                 Action_P ->
                     [ PasteBefore ]
-
-                Action_o ->
-                    [ InsertNewLine (cursorLine + 1), SetMode Insert, MoveCursor Down, MoveCursor LineBegin ]
-
-                Action_O ->
-                    [ InsertNewLine cursorLine, SetMode Insert, MoveCursor LineBegin ]
 
                 Action_Delete ->
                     [ DeleteChar (Position cursorLine cursorChar) ]
@@ -573,7 +576,7 @@ executeAction (Cursor cursorLine cursorChar) action =
                     else
                         []
 
-        ActionNoChangeType action_ ->
+        ActionMoveType action_ ->
             case action_ of
                 Action_yiw ->
                     [ ApplyCommandOnTextObject YankCommand InWord ]

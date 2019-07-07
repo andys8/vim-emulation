@@ -347,6 +347,14 @@ all =
                     \_ ->
                         initWithKeySequence [ "c", "i", "w" ]
                             |> expectMode Insert
+                , test "change a word replaces word" <|
+                    \_ ->
+                        initModelWithBuffer "abc"
+                            |> keySequence [ "c", "i", "w" ]
+                            |> Expect.all
+                                [ expectBuffer ""
+                                , expectMode Insert
+                                ]
                 , test "change a word in the middle" <|
                     \_ ->
                         initModelWithBuffer "ab cd ef"

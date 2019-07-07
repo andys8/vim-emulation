@@ -1,6 +1,6 @@
 module Main exposing (main, update)
 
-import Action exposing (Action(..), ActionChange(..), ActionInsert(..), ActionMove(..), isChangeAction)
+import Action exposing (Action(..), ActionChange(..), ActionInsert(..), ActionMove(..), toActionChange, toActionInsert)
 import Browser
 import Browser.Dom
 import Browser.Navigation as Navigation
@@ -135,7 +135,8 @@ update msg model =
                 -- TODO: E.g. 'ciw' has to include the actual change in insert mode
                 -- TODO: Repeat changes done in insert mode
                 isLastChangeAction action =
-                    isChangeAction action && action /= ActionChangeType Action_Dot
+                    (isJust (toActionChange action) && action /= ActionChangeType Action_Dot)
+                        || isJust (toActionInsert action)
 
                 msgs =
                     model.actions
@@ -758,3 +759,13 @@ applyMsgs ( model, msgs ) =
 shift : String
 shift =
     String.repeat config.shiftWidth " "
+
+
+isJust : Maybe a -> Bool
+isJust maybe =
+    case maybe of
+        Just _ ->
+            True
+
+        Nothing ->
+            False

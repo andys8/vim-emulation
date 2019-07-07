@@ -1,4 +1,13 @@
-module Action exposing (Action(..), ActionChange(..), ActionInsert(..), ActionMove(..), fromKeyStrokes, isChangeAction)
+module Action exposing
+    ( Action(..)
+    , ActionChange(..)
+    , ActionInsert(..)
+    , ActionMove(..)
+    , fromKeyStrokes
+    , toActionChange
+    , toActionInsert
+    , toActionMove
+    )
 
 
 type Action
@@ -197,15 +206,35 @@ fromKeyStrokes keyStrokes =
             Nothing
 
 
-isChangeAction : Action -> Bool
-isChangeAction action =
-    -- TODO: Refactor to extract Maybe or Prism
-    case action of
-        ActionInsertType _ ->
-            True
 
-        ActionChangeType _ ->
-            True
+-- convert (could be prism)
 
-        ActionMoveType _ ->
-            False
+
+toActionChange : Action -> Maybe ActionChange
+toActionChange actionType =
+    case actionType of
+        ActionChangeType action ->
+            Just action
+
+        _ ->
+            Nothing
+
+
+toActionInsert : Action -> Maybe ActionInsert
+toActionInsert actionType =
+    case actionType of
+        ActionInsertType action ->
+            Just action
+
+        _ ->
+            Nothing
+
+
+toActionMove : Action -> Maybe ActionMove
+toActionMove actionType =
+    case actionType of
+        ActionMoveType action ->
+            Just action
+
+        _ ->
+            Nothing

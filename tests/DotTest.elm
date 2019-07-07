@@ -2,7 +2,6 @@ module DotTest exposing (all)
 
 import Buffer exposing (..)
 import Expect
-import Fuzzers
 import Model exposing (Buffer(..), Cursor(..), Mode(..), Msg(..))
 import Test exposing (..)
 import TestUtil exposing (..)
@@ -36,7 +35,19 @@ all =
                             , expectMode Normal
                             ]
         , describe "Verify key sequences lead to the same result"
-            [ testEqualKeySequence "Pasting line"
+            [ testEqualKeySequence "Has no effect with movements only"
+                []
+                [ "." ]
+            , testEqualKeySequence "Delete with x"
+                [ "x", "x" ]
+                [ "x", "." ]
+            , testEqualKeySequence "Delete with X"
+                [ "X", "X" ]
+                [ "X", "." ]
+            , testEqualKeySequence "Delete with x and minor movement"
+                [ "x", "j", "k", "x" ]
+                [ "x", "j", "k", "." ]
+            , testEqualKeySequence "Pasting line"
                 [ "y", "y", "p", "p" ]
                 [ "y", "y", "p", "." ]
             , testEqualKeySequence "Pasting line somewhere"

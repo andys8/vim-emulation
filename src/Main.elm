@@ -69,19 +69,16 @@ update msg model =
                 |> handleKey key
                 |> applyMsgs
 
-        SetMode Normal ->
+        SetMode mode ->
             let
                 cursor =
-                    if cursorChar_ model.cursor > 0 then
+                    if mode == Normal && cursorChar_ model.cursor > 0 then
                         cursorMoveLeft model.cursor
 
                     else
                         model.cursor
             in
-            ( { model | mode = Normal, cursor = cursor }, Cmd.none )
-
-        SetMode mode ->
-            ( { model | mode = mode }, Cmd.none )
+            ( { model | mode = mode, cursor = cursor }, Cmd.none )
 
         SetCursor cursor ->
             ( { model | cursor = cursor }, Cmd.none )

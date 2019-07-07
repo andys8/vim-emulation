@@ -49,7 +49,7 @@
 
 ### Undoing, repeating & registers
 
-- <kbd>.</kbd> repeat last changes (*WIP*)
+- <kbd>.</kbd> repeat last change
 
 ## Further information
 

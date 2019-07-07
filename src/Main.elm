@@ -1,6 +1,6 @@
 module Main exposing (main, update)
 
-import Action exposing (Action(..), ActionChange(..), ActionInsert(..), ActionMove(..), toActionChange, toActionInsert)
+import Action exposing (Action(..), ActionChange(..), ActionInsert(..), ActionMove(..))
 import Browser
 import Browser.Dom
 import Browser.Navigation as Navigation
@@ -79,7 +79,7 @@ update msg model =
                         model.cursor
 
                 insertModeKeyStrokes =
-                    if mode == Insert && model.mode /= Insert then
+                    if mode == Insert then
                         []
 
                     else
@@ -141,21 +141,33 @@ update msg model =
 
         RepeatLastChangeAction ->
             let
-                -- TODO: E.g. 'ciw' has to include the actual change in insert mode
-                -- Use model.insertModeKeyStrokes
-                -- TODO: Repeat changes done in insert mode (only)
-                isLastChangeAction action =
-                    (isJust (toActionChange action) && action /= ActionChangeType Action_Dot)
-                        || isJust (toActionInsert action)
+                toMsgs actions =
+                    case actions of
+                        [] ->
+                            []
 
-                msgs =
-                    model.actions
-                        |> List.Extra.find isLastChangeAction
-                        |> Maybe.map (executeAction model.cursor)
-                        |> Maybe.withDefault []
+                        (ActionMoveType _) :: xs ->
+                            toMsgs xs
+
+                        (ActionChangeType Action_Dot) :: xs ->
+                            toMsgs xs
+
+                        ((ActionChangeType _) as action) :: _ ->
+                            executeAction model.cursor action
+
+                        ((ActionInsertType _) as action) :: _ ->
+                            let
+                                replayInsertMode =
+                                    model.insertModeKeyStrokes
+                                        |> List.reverse
+                                        |> List.map KeyDown
+                            in
+                            executeAction model.cursor action
+                                ++ replayInsertMode
+                                ++ [ SetMode Normal ]
             in
             ( model, Cmd.none )
-                |> sequence update msgs
+                |> sequence update (toMsgs model.actions)
 
         YankLine lineNumber ->
             let
@@ -284,19 +296,11 @@ update msg model =
                                 (command == YankCommand)
                                 model.buffer
                                 (Buffer <| before ++ String.dropLeft (String.length wordContent) (middle ++ after))
-
-                        -- TODO: Maybe extracing insert mode to outside
-                        mode =
-                            ifThenElse
-                                (command == ChangeCommand)
-                                Insert
-                                model.mode
                     in
                     ( { model
                         | cursor = cursorFromPosition position
                         , register = RegisterString wordContent
                         , buffer = buffer
-                        , mode = mode
                       }
                     , Cmd.none
                     )
@@ -533,7 +537,7 @@ executeAction (Cursor cursorLine cursorChar) action =
         ActionInsertType action_ ->
             case action_ of
                 Action_ciw ->
-                    [ ApplyCommandOnTextObject ChangeCommand InWord ]
+                    [ ApplyCommandOnTextObject ChangeCommand InWord, SetMode Insert ]
 
                 Action_cc_or_S ->
                     [ ClearLine cursorLine, SetMode Insert ]
@@ -774,15 +778,3 @@ applyMsgs ( model, msgs ) =
 shift : String
 shift =
     String.repeat config.shiftWidth " "
-
-
-isJust : Maybe a -> Bool
-isJust maybe =
-    case maybe of
-        Just _ ->
-            True
-
-        Nothing ->
-            False
-
-

@@ -4,9 +4,6 @@ module Action exposing
     , ActionInsert(..)
     , ActionMove(..)
     , fromKeyStrokes
-    , toActionChange
-    , toActionInsert
-    , toActionMove
     )
 
 
@@ -207,34 +204,3 @@ fromKeyStrokes keyStrokes =
 
 
 
--- convert (could be prism)
-
-
-toActionChange : Action -> Maybe ActionChange
-toActionChange actionType =
-    case actionType of
-        ActionChangeType action ->
-            Just action
-
-        _ ->
-            Nothing
-
-
-toActionInsert : Action -> Maybe ActionInsert
-toActionInsert actionType =
-    case actionType of
-        ActionInsertType action ->
-            Just action
-
-        _ ->
-            Nothing
-
-
-toActionMove : Action -> Maybe ActionMove
-toActionMove actionType =
-    case actionType of
-        ActionMoveType action ->
-            Just action
-
-        _ ->
-            Nothing

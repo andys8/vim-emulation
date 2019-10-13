@@ -1,11 +1,14 @@
 {
-  "main.css": "/vim-emulation/static/css/main.e50af6bb.chunk.css",
-  "main.js": "/vim-emulation/static/js/main.9fe7a656.chunk.js",
-  "main.css.map": "/vim-emulation/static/css/main.e50af6bb.chunk.css.map",
-  "main.js.map": "/vim-emulation/static/js/main.9fe7a656.chunk.js.map",
-  "runtime~main.js": "/vim-emulation/static/js/runtime~main.30e22a6c.js",
-  "runtime~main.js.map": "/vim-emulation/static/js/runtime~main.30e22a6c.js.map",
+  "main.css": "/vim-emulation/static/css/main.13ef1063.chunk.css",
+  "main.js": "/vim-emulation/static/js/main.94b73c7e.chunk.js",
+  "main.js.map": "/vim-emulation/static/js/main.94b73c7e.chunk.js.map",
+  "runtime~main.js": "/vim-emulation/static/js/runtime~main.fdd25489.js",
+  "runtime~main.js.map": "/vim-emulation/static/js/runtime~main.fdd25489.js.map",
   "vendors~main.js": "/vim-emulation/static/js/vendors~main.3ca81432.chunk.js",
   "vendors~main.js.map": "/vim-emulation/static/js/vendors~main.3ca81432.chunk.js.map",
-  "index.html": "/vim-emulation/index.html"
+  "./service-worker.js": "/vim-emulation/./service-worker.js",
+  "favicon.ico": "/vim-emulation/favicon.ico",
+  "index.html": "/vim-emulation/index.html",
+  "manifest.json": "/vim-emulation/manifest.json",
+  "precache-manifest.c266d0cb1d24f82783ffd59e232d199c.js": "/vim-emulation/precache-manifest.c266d0cb1d24f82783ffd59e232d199c.js"
 }

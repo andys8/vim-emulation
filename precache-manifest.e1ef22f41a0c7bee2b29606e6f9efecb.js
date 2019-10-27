@@ -4,7 +4,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/vim-emulation/favicon.ico"
   },
   {
-    "revision": "efd65c9629ab78b06428a05a38c3251a",
+    "revision": "ee4a33c9fed644fcb486d7e821f24162",
     "url": "/vim-emulation/index.html"
   },
   {
@@ -12,12 +12,12 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/vim-emulation/manifest.json"
   },
   {
-    "revision": "94b73c7ec5f6e685188a",
+    "revision": "392fc4eae9a8cab452cb",
     "url": "/vim-emulation/static/css/main.13ef1063.chunk.css"
   },
   {
-    "revision": "94b73c7ec5f6e685188a",
-    "url": "/vim-emulation/static/js/main.94b73c7e.chunk.js"
+    "revision": "392fc4eae9a8cab452cb",
+    "url": "/vim-emulation/static/js/main.392fc4ea.chunk.js"
   },
   {
     "revision": "fdd25489a56b5d76bb0b",

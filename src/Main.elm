@@ -6,6 +6,7 @@ import Browser.Dom
 import Browser.Navigation as Navigation
 import Buffer exposing (..)
 import Config exposing (config)
+import File.Download
 import List.Extra
 import Model
     exposing
@@ -13,6 +14,7 @@ import Model
         , Command(..)
         , Cursor(..)
         , CursorDirection(..)
+        , File(..)
         , Mode(..)
         , Model
         , Msg(..)
@@ -181,6 +183,11 @@ update msg model =
 
         ExecuteCmd cmd ->
             ( model, cmd )
+
+        SaveFile (File fileName) ->
+            ( model
+            , File.Download.string fileName "text/plain" (bufferToString model.buffer)
+            )
 
         PasteBefore ->
             case model.register of
@@ -704,14 +711,29 @@ handleCommandLineEntered text =
             else
                 [ MoveCursor (ToLine lineNumber), MoveCursor FirstWORDinLine ]
 
-        _ ->
+        Nothing ->
             let
                 command =
-                    -- Ignore "!" for now, but has to be implemnted
+                    -- Ignore "!" for now, but has to be implemented
                     String.replace "!" "" text
+
+                argument =
+                    command
+                        |> String.split " "
+                        |> List.drop 1
+                        |> String.join " "
+
+                isCommand str =
+                    command == str || String.startsWith (str ++ " ") command
             in
-            if List.member command [ "q", "qa", "wq", "x", "quit" ] then
+            if List.member command [ "q", "qa", "quit" ] then
                 [ ExecuteCmd quitVim ]
+
+            else if isCommand "x" || isCommand "wq" then
+                [ SaveFile (File argument), ExecuteCmd quitVim ]
+
+            else if isCommand "w" then
+                [ SaveFile (File argument) ]
 
             else if List.member command [ "bd", "bdelete" ] then
                 [ ClearBuffer ]

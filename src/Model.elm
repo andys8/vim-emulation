@@ -3,6 +3,7 @@ module Model exposing
     , Command(..)
     , Cursor(..)
     , CursorDirection(..)
+    , File(..)
     , Mode(..)
     , Model
     , Msg(..)
@@ -57,6 +58,7 @@ type Msg
     | MoveCursor CursorDirection
     | PasteAfter
     | PasteBefore
+    | SaveFile File
     | SetCursor Cursor
     | SetMode Mode
     | YankLine Int
@@ -135,3 +137,5 @@ type Command
     | ChangeCommand
 
 
+type File
+    = File String

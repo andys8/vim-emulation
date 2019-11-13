@@ -45,7 +45,10 @@
 ### Ex commands
 
 - <kbd>:q!</kbd> quit and discard changes
+- <kbd>:w [file]</kbd> save file
+- <kbd>:x [file]</kbd> save file and exit
 - <kbd>:[n]</kbd> jump to an absolute line number `[n]`
+- <kbd>:bd</kbd> clear buffer
 
 ### Undoing, repeating & registers
 

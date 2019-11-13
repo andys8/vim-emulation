@@ -138,7 +138,7 @@ viewBufferLineNumber cursor lineDifference =
 
 viewCursor : String -> Element msg
 viewCursor charUnderCursor =
-    el [ Background.color colors.bufferFont, Font.color colors.bufferBg, paddingXY 0 yPadding, lineHeight ] <|
+    el [ Background.color colors.cursor, Font.color colors.bufferBg, paddingXY 0 yPadding, lineHeight ] <|
         if String.isEmpty charUnderCursor then
             text " "
 

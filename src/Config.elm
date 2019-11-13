@@ -9,6 +9,13 @@ type alias Config =
     }
 
 
+config : Config
+config =
+    { shiftWidth = 4
+    , colors = colors
+    }
+
+
 type alias Colors =
     { white : Color
     , black : Color
@@ -17,18 +24,12 @@ type alias Colors =
     , bufferNameRightBg : Color
     , bufferBg : Color
     , bufferFont : Color
+    , cursor : Color
     , lineNumberFont : Color
     , lineNumberCurrentFont : Color
     , airLineBg : Color
     , airLineNormalModeBg : Color
     , airLineInsertModeBg : Color
-    }
-
-
-config : Config
-config =
-    { shiftWidth = 4
-    , colors = colors
     }
 
 
@@ -41,6 +42,7 @@ colors =
     , bufferNameRightBg = rgb255 95 95 175
     , bufferBg = rgb255 40 42 54
     , bufferFont = rgb255 248 248 242
+    , cursor = rgb255 255 221 51
     , lineNumberFont = rgb255 95 95 135
     , lineNumberCurrentFont = rgb255 255 255 135
     , airLineBg = rgb255 95 95 95

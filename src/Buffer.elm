@@ -2,6 +2,7 @@ module Buffer exposing
     ( WordPositionType(..)
     , bufferToLines
     , bufferToLinesCount
+    , bufferToString
     , bufferToWORDs
     , bufferToWords
     , currentBufferLine
@@ -51,6 +52,11 @@ type alias SplitResult =
     , middle : String
     , after : String
     }
+
+
+bufferToString : Buffer -> String
+bufferToString (Buffer buffer) =
+    buffer
 
 
 bufferToLines : Buffer -> List String

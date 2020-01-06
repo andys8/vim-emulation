@@ -1,7 +1,7 @@
 {
   "name": "vim-emulation",
   "version": "1.0.0",
-  "description": "",
+  "description": "Vim implemented in Elm",
   "main": "index.js",
   "directories": {
     "test": "tests"
@@ -19,14 +19,14 @@
     "type": "git",
     "url": "git+https://github.com/andys8/vim-emulation.git"
   },
-  "author": "",
+  "author": "andys8",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/andys8/vim-emulation/issues"
   },
   "homepage": "https://github.com/andys8/vim-emulation#readme",
   "devDependencies": {
-    "create-elm-app": "4.0.0",
+    "create-elm-app": "4.1.2",
     "elm-analyse": "0.16.5",
     "elm-outdated": "1.1.0",
     "gh-pages": "2.1.1"

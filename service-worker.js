@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/vim-emulation/precache-manifest.df015ee1a10e791371619d3934769897.js"
+  "/vim-emulation/precache-manifest.b2c5fbf86ddf2aac752d64d947c63783.js"
 );
 
 workbox.core.skipWaiting();

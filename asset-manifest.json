@@ -1,7 +1,7 @@
 {
   "main.css": "/vim-emulation/static/css/main.13ef1063.chunk.css",
-  "main.js": "/vim-emulation/static/js/main.5578aee2.chunk.js",
-  "main.js.map": "/vim-emulation/static/js/main.5578aee2.chunk.js.map",
+  "main.js": "/vim-emulation/static/js/main.640a540b.chunk.js",
+  "main.js.map": "/vim-emulation/static/js/main.640a540b.chunk.js.map",
   "runtime~main.js": "/vim-emulation/static/js/runtime~main.fdd25489.js",
   "runtime~main.js.map": "/vim-emulation/static/js/runtime~main.fdd25489.js.map",
   "vendors~main.js": "/vim-emulation/static/js/vendors~main.3ca81432.chunk.js",
@@ -10,5 +10,5 @@
   "favicon.ico": "/vim-emulation/favicon.ico",
   "index.html": "/vim-emulation/index.html",
   "manifest.json": "/vim-emulation/manifest.json",
-  "precache-manifest.df015ee1a10e791371619d3934769897.js": "/vim-emulation/precache-manifest.df015ee1a10e791371619d3934769897.js"
+  "precache-manifest.b2c5fbf86ddf2aac752d64d947c63783.js": "/vim-emulation/precache-manifest.b2c5fbf86ddf2aac752d64d947c63783.js"
 }
